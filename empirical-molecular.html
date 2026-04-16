@@ -1,0 +1,58 @@
+<!-- empirical-molecular.html -->
+<div class="panel-layout">
+  <aside class="controls-panel">
+
+    <div class="control-group">
+      <div class="group-title">INPUT MODE</div>
+      <div class="btn-group">
+        <button class="style-btn active" id="em-mode-pct"  onclick="EmpiricalMolecular.setMode('percent')">% by Mass</button>
+        <button class="style-btn" id="em-mode-mass" onclick="EmpiricalMolecular.setMode('mass')">Actual Mass (g)</button>
+      </div>
+      <div class="mini-note" id="em-mode-note" style="margin-top:6px;">
+        Enter the percent by mass of each element. Values should add up to ~100%.
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">ELEMENT DATA</div>
+      <div style="display:grid;grid-template-columns:60px 1fr 28px;gap:4px;margin-bottom:4px;">
+        <span style="font-size:10px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Element</span>
+        <span style="font-size:10px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;" id="em-col-header">% by Mass</span>
+        <span></span>
+      </div>
+      <div id="em-element-rows"></div>
+      <button class="action-btn" onclick="EmpiricalMolecular.addRow()">＋ Add Element</button>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">MOLECULAR FORMULA (optional)</div>
+      <div class="mini-note" style="margin-bottom:6px;">If you know the molar mass of the compound, enter it to also find the molecular formula.</div>
+      <label>Molar Mass of Compound (g/mol)</label>
+      <input type="number" id="em-molar-mass" placeholder="e.g. 180" min="0" step="0.001" />
+      <div class="mini-note">Leave blank to calculate empirical formula only.</div>
+    </div>
+
+    <button class="action-btn primary" onclick="EmpiricalMolecular.calculate()">🔬 Calculate</button>
+    <button class="action-btn" onclick="EmpiricalMolecular.clear()">Clear</button>
+
+    <div class="control-group">
+      <div class="group-title">QUICK EXAMPLES</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <button class="style-btn" onclick="EmpiricalMolecular.loadExample('water')">H₂O from % mass</button>
+        <button class="style-btn" onclick="EmpiricalMolecular.loadExample('glucose')">Glucose (C₆H₁₂O₆)</button>
+        <button class="style-btn" onclick="EmpiricalMolecular.loadExample('empirical')">CH₂ (empirical only)</button>
+        <button class="style-btn" onclick="EmpiricalMolecular.loadExample('feo')">Iron Oxide</button>
+      </div>
+    </div>
+
+  </aside>
+
+  <div class="preview-panel">
+    <div class="preview-label">Results — empirical and molecular formula from composition data</div>
+    <div class="results-scroll-wrapper">
+      <div class="results-sheet" id="em-results">
+        <div class="placeholder-msg">🔬 Enter element data and click <strong>Calculate</strong> to find the empirical formula.</div>
+      </div>
+    </div>
+  </div>
+</div>

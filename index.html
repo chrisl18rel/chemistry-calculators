@@ -1,0 +1,79 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chemistry Calculators</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-logo">
+    <div class="logo-icon">⚗️</div>
+    <div class="logo-text">
+      <h1>Chemistry Calculators</h1>
+      <p>Molar mass · Equation balancing · Stoichiometry · Composition · Yield · Empirical formula</p>
+    </div>
+  </div>
+  <div class="app-version">v1.0</div>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="molar-mass">⚛️ Molar Mass</button>
+  <button class="tab-btn" data-tab="equation-balancer">⚖️ Equation Balancer</button>
+  <button class="tab-btn" data-tab="redox-balancer">🔋 Redox Balancer</button>
+  <button class="tab-btn" data-tab="stoichiometry">🧮 Stoichiometry</button>
+  <button class="tab-btn" data-tab="percent-composition">📊 % Composition</button>
+  <button class="tab-btn" data-tab="percent-yield">📈 % Yield</button>
+  <button class="tab-btn" data-tab="empirical-molecular">🔬 Empirical / Molecular</button>
+</nav>
+
+<main class="app-body">
+
+  <section id="tab-molar-mass" class="tab-panel active">
+    <div id="molar-mass-container"></div>
+  </section>
+
+  <section id="tab-equation-balancer" class="tab-panel">
+    <div id="equation-balancer-container"></div>
+  </section>
+
+  <section id="tab-redox-balancer" class="tab-panel">
+    <div id="redox-balancer-container"></div>
+  </section>
+
+  <section id="tab-stoichiometry" class="tab-panel">
+    <div id="stoichiometry-container"></div>
+  </section>
+
+  <section id="tab-percent-composition" class="tab-panel">
+    <div id="percent-composition-container"></div>
+  </section>
+
+  <section id="tab-percent-yield" class="tab-panel">
+    <div id="percent-yield-container"></div>
+  </section>
+
+  <section id="tab-empirical-molecular" class="tab-panel">
+    <div id="empirical-molecular-container"></div>
+  </section>
+
+</main>
+
+<!-- Styled alert container -->
+<div id="alert-container"></div>
+
+<script src="formula-parser.js"></script>
+<script src="app.js"></script>
+<script src="molar-mass.js"></script>
+<script src="equation-balancer.js"></script>
+<script src="redox-balancer.js"></script>
+<script src="stoichiometry.js"></script>
+<script src="percent-composition.js"></script>
+<script src="percent-yield.js"></script>
+<script src="empirical-molecular.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!-- molar-mass.html -->
+<div class="panel-layout">
+  <aside class="controls-panel">
+
+    <div class="control-group">
+      <div class="group-title">FORMULA INPUT</div>
+      <label>Chemical Formula</label>
+      <input type="text" id="mm-formula" class="formula-input"
+             placeholder="e.g. H2O, CuSO4·5H2O, Ca(OH)2"
+             autocomplete="off" autocorrect="off" spellcheck="false" />
+      <div class="mini-note">
+        Supports parentheses Ca(OH)₂, hydrates CuSO₄·5H₂O, and all 118 elements.
+        Use plain digits — they auto-convert to subscripts.
+      </div>
+      <button class="action-btn primary" onclick="MolarMass.calculate()" style="margin-top:10px;">
+        Calculate Molar Mass
+      </button>
+      <button class="action-btn" onclick="MolarMass.clear()">Clear</button>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">QUICK EXAMPLES</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <button class="style-btn" onclick="MolarMass.loadExample('H2O')">H₂O — Water</button>
+        <button class="style-btn" onclick="MolarMass.loadExample('NaCl')">NaCl — Sodium Chloride</button>
+        <button class="style-btn" onclick="MolarMass.loadExample('Ca(OH)2')">Ca(OH)₂ — Calcium Hydroxide</button>
+        <button class="style-btn" onclick="MolarMass.loadExample('CuSO4·5H2O')">CuSO₄·5H₂O — Copper(II) Sulfate Hydrate</button>
+        <button class="style-btn" onclick="MolarMass.loadExample('C6H12O6')">C₆H₁₂O₆ — Glucose</button>
+        <button class="style-btn" onclick="MolarMass.loadExample('Fe2(SO4)3')">Fe₂(SO₄)₃ — Iron(III) Sulfate</button>
+        <button class="style-btn" onclick="MolarMass.loadExample('Al2(SO4)3')">Al₂(SO₄)₃ — Aluminum Sulfate</button>
+        <button class="style-btn" onclick="MolarMass.loadExample('(NH4)2SO4')">(NH₄)₂SO₄ — Ammonium Sulfate</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">DISPLAY OPTIONS</div>
+      <div class="toggle-row">
+        <label class="toggle-label">
+          <input type="checkbox" id="mm-show-breakdown" checked />
+          Show element breakdown
+        </label>
+      </div>
+      <div class="toggle-row">
+        <label class="toggle-label">
+          <input type="checkbox" id="mm-show-percent" checked />
+          Show percent composition
+        </label>
+      </div>
+    </div>
+
+  </aside>
+
+  <div class="preview-panel">
+    <div class="preview-label">Results — molar mass breakdown and percent composition</div>
+    <div class="results-scroll-wrapper">
+      <div class="results-sheet" id="mm-results">
+        <div class="placeholder-msg">⚛️ Enter a chemical formula and click <strong>Calculate</strong> to see results.</div>
+      </div>
+    </div>
+  </div>
+</div>

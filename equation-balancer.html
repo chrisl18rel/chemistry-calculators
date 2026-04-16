@@ -1,0 +1,61 @@
+<!-- equation-balancer.html -->
+<div class="panel-layout">
+  <aside class="controls-panel">
+
+    <div class="control-group">
+      <div class="group-title">EQUATION INPUT</div>
+      <div class="mini-note" style="margin-bottom:8px;">
+        Enter reactants and products as separate formulas. Use plain digits for subscripts.
+        Parenthetical groups and hydrates supported.
+      </div>
+
+      <div class="section-label">Reactants</div>
+      <div id="eb-reactants-list"></div>
+      <button class="action-btn" onclick="EqBalancer.addReactant()">＋ Add Reactant</button>
+
+      <div class="display-divider"></div>
+
+      <div class="section-label">Products</div>
+      <div id="eb-products-list"></div>
+      <button class="action-btn" onclick="EqBalancer.addProduct()">＋ Add Product</button>
+
+      <div class="display-divider"></div>
+
+      <button class="action-btn primary" onclick="EqBalancer.balance()">⚖️ Balance Equation</button>
+      <button class="action-btn" onclick="EqBalancer.clear()">Clear All</button>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">QUICK EXAMPLES</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <button class="style-btn" onclick="EqBalancer.loadExample('combustion')">Combustion of Methane</button>
+        <button class="style-btn" onclick="EqBalancer.loadExample('photosynthesis')">Photosynthesis</button>
+        <button class="style-btn" onclick="EqBalancer.loadExample('ironrust')">Iron Rusting</button>
+        <button class="style-btn" onclick="EqBalancer.loadExample('haber')">Haber Process (N₂ + H₂)</button>
+        <button class="style-btn" onclick="EqBalancer.loadExample('thermite')">Thermite Reaction</button>
+        <button class="style-btn" onclick="EqBalancer.loadExample('aluminum')">Aluminum + Oxygen</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">TIPS</div>
+      <div class="mini-note">
+        • Separate each compound into its own row<br>
+        • Use parentheses for polyatomic ions: Ca(OH)2<br>
+        • Use · or • for hydrates: CuSO4·5H2O<br>
+        • The balancer uses algebraic (matrix) methods and handles most inorganic equations<br>
+        • For redox equations, use the <strong>Redox Balancer</strong> tab
+      </div>
+    </div>
+
+  </aside>
+
+  <div class="preview-panel">
+    <div class="preview-label">Results — balanced equation with coefficient verification</div>
+    <div class="results-scroll-wrapper">
+      <div class="results-sheet" id="eb-results">
+        <div class="placeholder-msg">⚖️ Add reactants and products, then click <strong>Balance Equation</strong>.</div>
+      </div>
+    </div>
+  </div>
+</div>

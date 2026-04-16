@@ -1,0 +1,48 @@
+<!-- percent-composition.html -->
+<div class="panel-layout">
+  <aside class="controls-panel">
+
+    <div class="control-group">
+      <div class="group-title">FORMULA INPUT</div>
+      <label>Chemical Formula</label>
+      <input type="text" id="pc-formula" class="formula-input"
+             placeholder="e.g. H2O, Fe2O3, Ca(OH)2"
+             autocomplete="off" spellcheck="false" />
+      <button class="action-btn primary" onclick="PercentComposition.calculate()" style="margin-top:10px;">
+        📊 Calculate % Composition
+      </button>
+      <button class="action-btn" onclick="PercentComposition.clear()">Clear</button>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">QUICK EXAMPLES</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <button class="style-btn" onclick="PercentComposition.loadExample('H2O')">H₂O — Water</button>
+        <button class="style-btn" onclick="PercentComposition.loadExample('CO2')">CO₂ — Carbon Dioxide</button>
+        <button class="style-btn" onclick="PercentComposition.loadExample('Fe2O3')">Fe₂O₃ — Iron(III) Oxide</button>
+        <button class="style-btn" onclick="PercentComposition.loadExample('C6H12O6')">C₆H₁₂O₆ — Glucose</button>
+        <button class="style-btn" onclick="PercentComposition.loadExample('Ca3(PO4)2')">Ca₃(PO₄)₂ — Calcium Phosphate</button>
+        <button class="style-btn" onclick="PercentComposition.loadExample('(NH4)2SO4')">(NH₄)₂SO₄ — Ammonium Sulfate</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">ABOUT</div>
+      <div class="mini-note">
+        Percent composition tells you the percentage by mass of each element in a compound.<br><br>
+        <strong>Formula:</strong><br>
+        % = (mass of element / molar mass) × 100
+      </div>
+    </div>
+
+  </aside>
+
+  <div class="preview-panel">
+    <div class="preview-label">Results — percent composition by mass</div>
+    <div class="results-scroll-wrapper">
+      <div class="results-sheet" id="pc-results">
+        <div class="placeholder-msg">📊 Enter a chemical formula and click <strong>Calculate % Composition</strong>.</div>
+      </div>
+    </div>
+  </div>
+</div>
