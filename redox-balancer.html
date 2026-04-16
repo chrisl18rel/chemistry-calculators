@@ -3,60 +3,47 @@
   <aside class="controls-panel">
 
     <div class="control-group">
-      <div class="group-title">HALF-REACTION METHOD</div>
+      <div class="group-title">MOLECULAR EQUATION INPUT</div>
       <div class="mini-note" style="margin-bottom:8px;">
-        Enter the unbalanced overall redox equation using the format:<br>
-        <strong>Reactants → Products</strong><br><br>
-        The calculator will split into oxidation and reduction half-reactions, balance each, then combine.
+        Enter the full molecular equation with state symbols. State symbols are required — they tell the tool which compounds dissociate into ions.
       </div>
-
-      <label>Oxidation Half-Reaction (species being oxidized → oxidized form)</label>
-      <input type="text" id="rx-ox-left"  class="formula-input" placeholder="e.g. Fe2+" autocomplete="off" spellcheck="false" />
-      <div style="text-align:center;color:var(--text-dim);font-size:11px;padding:3px 0;">→</div>
-      <input type="text" id="rx-ox-right" class="formula-input" placeholder="e.g. Fe3+" autocomplete="off" spellcheck="false" />
-
+      <textarea id="rx-equation" class="formula-input" rows="4"
+        placeholder="e.g. Zn(s) + CuSO4(aq) → ZnSO4(aq) + Cu(s)"
+        autocomplete="off" autocorrect="off" spellcheck="false"
+        style="resize:vertical;line-height:1.6;"></textarea>
+      <div class="mini-note" style="margin-top:4px;">
+        <strong>State symbols:</strong> (s) solid · (l) liquid · (g) gas · (aq) dissolved in water<br>
+        Use → or -> for the arrow. Ctrl+Enter to submit.
+      </div>
       <div class="display-divider"></div>
-
-      <label>Reduction Half-Reaction (species being reduced → reduced form)</label>
-      <input type="text" id="rx-red-left"  class="formula-input" placeholder="e.g. MnO4-" autocomplete="off" spellcheck="false" />
-      <div style="text-align:center;color:var(--text-dim);font-size:11px;padding:3px 0;">→</div>
-      <input type="text" id="rx-red-right" class="formula-input" placeholder="e.g. Mn2+" autocomplete="off" spellcheck="false" />
-
-      <div class="display-divider"></div>
-
       <label>Reaction Medium</label>
       <div class="btn-group" style="margin-top:4px;">
         <button class="style-btn active" id="rx-acid-btn" onclick="RedoxBalancer.setMedium('acidic')">Acidic (H⁺)</button>
         <button class="style-btn" id="rx-base-btn" onclick="RedoxBalancer.setMedium('basic')">Basic (OH⁻)</button>
       </div>
-
       <div class="display-divider"></div>
-
       <button class="action-btn primary" onclick="RedoxBalancer.balance()">🔋 Balance Redox Equation</button>
-      <button class="action-btn" onclick="RedoxBalancer.clear()">Clear All</button>
+      <button class="action-btn" onclick="RedoxBalancer.clear()">Clear</button>
     </div>
 
     <div class="control-group">
       <div class="group-title">QUICK EXAMPLES</div>
       <div style="display:flex;flex-direction:column;gap:4px;">
-        <button class="style-btn" onclick="RedoxBalancer.loadExample('fe_mn_acid')">Fe²⁺ / MnO₄⁻ (Acidic)</button>
-        <button class="style-btn" onclick="RedoxBalancer.loadExample('cr_acid')">Cr³⁺ / Cr₂O₇²⁻ (Acidic)</button>
-        <button class="style-btn" onclick="RedoxBalancer.loadExample('fe_mn_basic')">Fe²⁺ / MnO₄⁻ (Basic)</button>
-        <button class="style-btn" onclick="RedoxBalancer.loadExample('sn_bi')">Sn²⁺ / Bi³⁺ (Acidic)</button>
-        <button class="style-btn" onclick="RedoxBalancer.loadExample('io3_i')">IO₃⁻ / I⁻ (Acidic)</button>
+        <button class="style-btn" onclick="RedoxBalancer.loadExample('zncu')">Zn + CuSO₄ (single replacement)</button>
+        <button class="style-btn" onclick="RedoxBalancer.loadExample('feag')">Cu + AgNO₃ (single replacement)</button>
+        <button class="style-btn" onclick="RedoxBalancer.loadExample('ironrust')">Fe + HCl (acid-metal)</button>
       </div>
     </div>
 
     <div class="control-group">
-      <div class="group-title">ENTERING IONS</div>
+      <div class="group-title">TIPS</div>
       <div class="mini-note">
-        Enter charges using + or − after the formula:<br>
-        • Fe2+ &nbsp;→ Fe²⁺<br>
-        • MnO4- &nbsp;→ MnO₄⁻<br>
-        • Cr2O72- → Cr₂O₇²⁻<br><br>
-        For neutral molecules just write the formula:<br>
-        • MnO4 (permanganate without charge)<br><br>
-        The balancer adds H₂O, H⁺ (acidic) or OH⁻ (basic), and electrons automatically.
+        • <strong>State symbols are required</strong> — (aq) compounds are split into ions; (s), (l), (g) stay as formula units<br>
+        • Solubility rules and weak acid/base rules are applied automatically<br>
+        • Spectator ions are identified and cancelled to give the net ionic equation<br>
+        • Oxidation numbers are assigned automatically — fractional states supported<br>
+        • Steps follow the half-reaction method for acidic or basic solutions<br>
+        • For very complex multi-element redox, results may need manual verification
       </div>
     </div>
 
@@ -66,7 +53,7 @@
     <div class="preview-label">Results — step-by-step half-reaction method</div>
     <div class="results-scroll-wrapper">
       <div class="results-sheet" id="rx-results">
-        <div class="placeholder-msg">🔋 Enter oxidation and reduction half-reactions, then click <strong>Balance Redox Equation</strong>.</div>
+        <div class="placeholder-msg">🔋 Enter a molecular equation with state symbols and click <strong>Balance Redox Equation</strong>.</div>
       </div>
     </div>
   </div>
