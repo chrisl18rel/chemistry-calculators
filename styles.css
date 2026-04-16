@@ -680,3 +680,239 @@ textarea { resize: vertical; min-height: 60px; }
 /* Color helpers */
 .ox-color  { color: #c0293f; }
 .red-color { color: #1a56a8; }
+
+/* ═══════════════════════════════════════
+   STOICHIOMETRY FULL-PAGE LAYOUT
+═══════════════════════════════════════ */
+
+/* Override tab panel height for stoichiometry — allow scrolling */
+#tab-stoichiometry { overflow-y: auto; }
+#tab-stoichiometry > div { height: auto; min-height: 100%; }
+
+.stoi-fullpage {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 24px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.stoi-section {
+  background: #ffffff;
+  border: 1px solid #dde3f0;
+  border-radius: 8px;
+  padding: 18px 22px;
+  margin-bottom: 14px;
+}
+
+.stoi-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a2a4a;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e8edf8;
+}
+
+.stoi-hint {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+/* Equation input row */
+.stoi-eq-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.stoi-eq-textarea {
+  flex: 1;
+  resize: vertical;
+  min-height: 52px;
+  font-size: 14px;
+  line-height: 1.6;
+  background: #fff;
+  border: 2px solid #c8d5ee;
+  border-radius: 6px;
+  color: #111;
+  padding: 8px 12px;
+}
+.stoi-eq-textarea:focus { border-color: #4a90e2; outline: none; }
+.stoi-balance-btn {
+  background: #1a56a8;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.stoi-balance-btn:hover { background: #154090; }
+
+/* Balanced equation display */
+.stoi-balanced-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1a56a8;
+  margin-bottom: 4px;
+  margin-top: 12px;
+}
+.stoi-balanced-eq {
+  font-family: 'Courier New', monospace;
+  font-size: 15px;
+  color: #1a56a8;
+  font-weight: 600;
+  background: #f0f6ff;
+  border: 1px solid #c8d5ee;
+  border-radius: 5px;
+  padding: 10px 16px;
+  text-align: center;
+}
+
+/* Mode toggle row */
+.stoi-mode-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 0;
+}
+.stoi-mode-label {
+  font-size: 13px;
+  color: #333;
+  cursor: default;
+  transition: font-weight 0.15s;
+}
+
+/* Input grid */
+.stoi-input-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 14px;
+}
+.stoi-input-cell { display: flex; flex-direction: column; gap: 4px; }
+.stoi-lbl { font-size: 11px; color: #555; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+.stoi-select {
+  background: #fff;
+  border: 1px solid #c8d5ee;
+  border-radius: 5px;
+  color: #111;
+  font-size: 13px;
+  padding: 6px 10px;
+  outline: none;
+  min-width: 180px;
+}
+.stoi-select:focus { border-color: #4a90e2; }
+.stoi-num-input {
+  background: #fff;
+  border: 1px solid #c8d5ee;
+  border-radius: 5px;
+  color: #111;
+  font-size: 13px;
+  padding: 6px 10px;
+  outline: none;
+  width: 120px;
+}
+.stoi-num-input:focus { border-color: #4a90e2; }
+.stoi-radio-row { display: flex; gap: 12px; align-items: center; padding: 6px 0; }
+.stoi-radio { display: flex; align-items: center; gap: 4px; font-size: 13px; color: #333; cursor: pointer; }
+.stoi-radio input { accent-color: #1a56a8; width: 15px; height: 15px; }
+
+/* Calculate button */
+.stoi-calc-btn {
+  background: #1a56a8;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 24px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  display: block;
+}
+.stoi-calc-btn:hover { background: #154090; }
+
+/* Export button */
+.stoi-export-btn {
+  background: #fff;
+  color: #1a56a8;
+  border: 2px solid #c8d5ee;
+  border-radius: 6px;
+  padding: 7px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.stoi-export-btn:hover { background: #f0f6ff; border-color: #4a90e2; }
+
+/* Results */
+.stoi-results-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a56a8;
+  text-align: center;
+  margin-bottom: 14px;
+}
+.stoi-limiting-name { color: #e94560; }
+.stoi-table-section-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #444;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: 14px 0 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e0e0e0;
+}
+.stoi-table-subheader {
+  background: #f0f4fa;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #444;
+  padding: 6px 10px;
+}
+.stoi-result-table td { vertical-align: middle; line-height: 1.7; }
+.stoi-given-row td   { background: #f0fff4; }
+.stoi-limiting-row td{ background: #fff0f3; }
+
+/* Step-by-step box */
+.stoi-steps-box {
+  background: #fffdf0;
+  border: 1px solid #e8dfa0;
+  border-radius: 8px;
+  padding: 18px 22px;
+  margin-top: 18px;
+}
+.stoi-steps-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e8dfa0;
+}
+.stoi-step {
+  font-size: 13px;
+  color: #222;
+  margin: 10px 0 4px;
+  line-height: 1.6;
+}
+.stoi-step-sub {
+  font-size: 12px;
+  color: #444;
+  margin: 3px 0 3px 20px;
+  line-height: 1.6;
+}
