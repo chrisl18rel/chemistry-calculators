@@ -6,10 +6,10 @@
       <div class="group-title">FORMULA INPUT</div>
       <label>Chemical Formula</label>
       <input type="text" id="mm-formula" class="formula-input"
-             placeholder="e.g. H2O, CuSO4·5H2O, Ca(OH)2"
+             placeholder="e.g. H2O, CuSO4*5H2O, Ca(OH)2"
              autocomplete="off" autocorrect="off" spellcheck="false" />
       <div class="mini-note">
-        Supports parentheses Ca(OH)₂, hydrates CuSO₄·5H₂O, and all 118 elements.
+        Supports parentheses Ca(OH)₂, hydrates CuSO₄*5H₂O (use * for the dot), and all 118 elements.
         Use plain digits — they auto-convert to subscripts.
       </div>
       <button class="action-btn primary" onclick="MolarMass.calculate()" style="margin-top:10px;">
@@ -24,7 +24,7 @@
         <button class="style-btn" onclick="MolarMass.loadExample('H2O')">H₂O — Water</button>
         <button class="style-btn" onclick="MolarMass.loadExample('NaCl')">NaCl — Sodium Chloride</button>
         <button class="style-btn" onclick="MolarMass.loadExample('Ca(OH)2')">Ca(OH)₂ — Calcium Hydroxide</button>
-        <button class="style-btn" onclick="MolarMass.loadExample('CuSO4·5H2O')">CuSO₄·5H₂O — Copper(II) Sulfate Hydrate</button>
+        <button class="style-btn" onclick="MolarMass.loadExample('CuSO4*5H2O')">CuSO₄*5H₂O — Copper(II) Sulfate Hydrate</button>
         <button class="style-btn" onclick="MolarMass.loadExample('C6H12O6')">C₆H₁₂O₆ — Glucose</button>
         <button class="style-btn" onclick="MolarMass.loadExample('Fe2(SO4)3')">Fe₂(SO₄)₃ — Iron(III) Sulfate</button>
         <button class="style-btn" onclick="MolarMass.loadExample('Al2(SO4)3')">Al₂(SO₄)₃ — Aluminum Sulfate</button>
