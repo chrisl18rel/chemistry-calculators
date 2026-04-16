@@ -508,3 +508,175 @@ textarea { resize: vertical; min-height: 60px; }
   padding: 3px 8px;
   border-radius: 10px;
 }
+
+/* ═══════════════════════════════════════
+   REDOX BALANCER SPECIFIC STYLES
+═══════════════════════════════════════ */
+
+/* Step cards */
+.rx-step-card {
+  background: #fff;
+  border: 1px solid #dde3f0;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+.rx-step-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f0f4fa;
+  padding: 9px 14px;
+  border-bottom: 1px solid #dde3f0;
+}
+.rx-step-num {
+  background: #1a56a8;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
+}
+.rx-step-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a2a4a;
+}
+.rx-step-body {
+  padding: 14px 16px;
+}
+
+/* Equation display */
+.rx-eq {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  color: #1a2a4a;
+  background: #f8f9ff;
+  border: 1px solid #dde3f0;
+  border-radius: 5px;
+  padding: 10px 14px;
+  margin: 6px 0;
+  line-height: 2.2;
+}
+.rx-annotated {
+  line-height: 2.8;
+}
+
+/* Oxidation number annotation above formula */
+.rx-on-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 2px;
+  vertical-align: bottom;
+}
+.rx-on-num {
+  font-size: 10px;
+  font-weight: 700;
+  color: #1a56a8;
+  line-height: 1;
+  margin-bottom: 1px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* Notes and annotations */
+.rx-note {
+  font-size: 12px;
+  color: #555;
+  margin: 5px 0;
+  line-height: 1.6;
+}
+
+/* Sub-steps within a step card */
+.rx-substep {
+  background: #f8f9ff;
+  border: 1px solid #e8edf8;
+  border-radius: 5px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+.rx-substep-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 5px;
+}
+
+/* Final half-reaction display box */
+.rx-final-hr {
+  background: #f0f6ff;
+  border: 2px solid #4a90e2;
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-top: 10px;
+}
+.rx-final-hr.ox-border { border-color: #e94560; background: #fff5f7; }
+.rx-final-hr.red-border { border-color: #4a90e2; background: #f0f6ff; }
+
+/* Half-reaction split layout */
+.rx-half-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 6px;
+}
+.rx-half-block {
+  background: #f8f9ff;
+  border: 1px solid #dde3f0;
+  border-radius: 6px;
+  padding: 12px;
+}
+.rx-half-label {
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+/* Redox diagram (oxidized/reduced visual) */
+.rx-diagram {
+  background: #f8f9ff;
+  border: 1px solid #dde3f0;
+  border-radius: 6px;
+  padding: 14px;
+  margin: 8px 0;
+}
+.rx-arrow-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.rx-diagram-eq {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-family: 'Courier New', monospace;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #e0e6f0;
+  border-radius: 5px;
+}
+.rx-arrow-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.rx-dim { color: #888; }
+
+/* Species highlight boxes */
+.rx-hl {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+.ox-hl  { background: rgba(233,69,96,0.12); color: #c0293f; border: 1px solid rgba(233,69,96,0.25); }
+.red-hl { background: rgba(74,144,226,0.12); color: #1a56a8; border: 1px solid rgba(74,144,226,0.25); }
+
+/* Color helpers */
+.ox-color  { color: #c0293f; }
+.red-color { color: #1a56a8; }
