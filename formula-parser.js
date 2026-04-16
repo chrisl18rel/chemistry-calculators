@@ -24,7 +24,7 @@ const ATOMIC_MASSES = {
 // Returns an object { element: count } or throws on invalid formula
 // Supports:
 //   - Parenthetical groups: Ca(OH)2, Fe2(SO4)3, Al2(SO4)3
-//   - Hydrates: CuSO4·5H2O  (dot or middle dot)
+//   - Hydrates: CuSO4*5H2O  (* asterisk recommended, · and • also work)
 //   - Unicode subscripts: H₂O
 //   - Nested parentheses: Ca(H2(PO4))2 (limited depth)
 //   - Charges in brackets: [Fe(CN)6]4- (bracket treated like paren)
@@ -36,9 +36,9 @@ function parseFormula(formula) {
   const subMap = {'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9'};
   let f = formula.trim().replace(/[₀₁₂₃₄₅₆₇₈₉]/g, c => subMap[c] || c);
 
-  // Handle hydrate separator (· or . between groups)
-  // Split on · or on "·" unicode middle dot
-  const hydrateParts = f.split(/[·•]/);
+  // Handle hydrate separator: * (asterisk), · (middle dot), or • (bullet)
+  // e.g. CuSO4*5H2O, CuSO4·5H2O, CuSO4•5H2O
+  const hydrateParts = f.split(/[·•*]/);
   const combined = {};
   for (const part of hydrateParts) {
     const partResult = _parseSegment(part.trim());
