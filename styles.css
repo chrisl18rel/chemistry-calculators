@@ -77,9 +77,13 @@ body {
   overflow: hidden;
 }
 
-.tab-panel { display: none; height: 100%; }
+.tab-panel { display: none; height: 100%; overflow: hidden; }
 .tab-panel.active { display: block; }
 .tab-panel > div { height: 100%; }
+
+/* Stoichiometry tab scrolls instead of clipping */
+#tab-stoichiometry { overflow-y: auto; }
+#tab-stoichiometry > div { height: auto; min-height: 100%; }
 
 /* ── PANEL LAYOUT ── */
 .panel-layout {
@@ -685,9 +689,10 @@ textarea { resize: vertical; min-height: 60px; }
    STOICHIOMETRY FULL-PAGE LAYOUT
 ═══════════════════════════════════════ */
 
-/* Override tab panel height for stoichiometry — allow scrolling */
-#tab-stoichiometry { overflow-y: auto; }
-#tab-stoichiometry > div { height: auto; min-height: 100%; }
+/* Outer wrapper — dark background matching the rest of the app */
+#tab-stoichiometry {
+  background: var(--bg);
+}
 
 .stoi-fullpage {
   max-width: 900px;
@@ -734,13 +739,28 @@ textarea { resize: vertical; min-height: 60px; }
   min-height: 52px;
   font-size: 14px;
   line-height: 1.6;
-  background: #fff;
-  border: 2px solid #c8d5ee;
+  background: #fff !important;
+  border: 2px solid #c8d5ee !important;
   border-radius: 6px;
-  color: #111;
+  color: #111 !important;
   padding: 8px 12px;
 }
-.stoi-eq-textarea:focus { border-color: #4a90e2; outline: none; }
+.stoi-eq-textarea:focus { border-color: #4a90e2 !important; outline: none; }
+
+/* Override global dark input styles inside stoichiometry sections */
+.stoi-section input[type="number"],
+.stoi-section input[type="text"],
+.stoi-section select {
+  background: #fff !important;
+  border-color: #c8d5ee !important;
+  color: #111 !important;
+}
+.stoi-section input[type="number"]:focus,
+.stoi-section input[type="text"]:focus,
+.stoi-section select:focus {
+  border-color: #4a90e2 !important;
+}
+.stoi-section label { color: #333 !important; margin-top: 0; }
 .stoi-balance-btn {
   background: #1a56a8;
   color: #fff;
