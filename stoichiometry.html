@@ -1,104 +1,91 @@
 <!-- stoichiometry.html -->
-<div class="panel-layout">
-  <aside class="controls-panel">
+<div class="stoi-fullpage">
 
-    <div class="control-group">
-      <div class="group-title">CALCULATION MODE</div>
-      <div class="toggle-switch-row">
-        <label class="toggle-switch">
-          <input type="checkbox" id="stoi-limiting-toggle" onchange="Stoichiometry.toggleMode()" />
-          <span class="toggle-slider"></span>
-        </label>
-        <span class="toggle-switch-label" id="stoi-mode-label">Standard Stoichiometry</span>
-      </div>
-      <div class="mini-note" id="stoi-mode-note">
-        Calculate the amount of product produced or reactant consumed from a known quantity of one substance.
-      </div>
+  <!-- ── EQUATION INPUT ── -->
+  <div class="stoi-section">
+    <div class="stoi-section-title">Step 1: Enter Chemical Equation</div>
+    <div class="stoi-hint">Paste or type a full equation. Blanks, state symbols, and existing coefficients are stripped automatically.</div>
+    <div class="stoi-eq-row">
+      <textarea id="stoi-eq-input" class="stoi-eq-textarea formula-input"
+        placeholder="e.g. H2 + O2 → H2O   or   ___Al4C3 + ___H2O → ___CH4 + ___Al(OH)3"
+        autocomplete="off" autocorrect="off" spellcheck="false" rows="2"></textarea>
+      <button class="stoi-balance-btn" onclick="Stoichiometry.balanceStep()">⚖️ Balance</button>
     </div>
-
-    <div class="control-group">
-      <div class="group-title">BALANCED EQUATION</div>
-      <div class="mini-note" style="margin-bottom:8px;">Enter each compound and its coefficient from the balanced equation.</div>
-
-      <div class="section-label">Reactants</div>
-      <div id="stoi-reactants-list"></div>
-      <button class="action-btn" onclick="Stoichiometry.addReactant()">＋ Add Reactant</button>
-
-      <div class="display-divider"></div>
-
-      <div class="section-label">Products</div>
-      <div id="stoi-products-list"></div>
-      <button class="action-btn" onclick="Stoichiometry.addProduct()">＋ Add Product</button>
+    <div id="stoi-balanced-display" style="display:none;">
+      <div class="stoi-balanced-label">Balanced Equation:</div>
+      <div class="stoi-balanced-eq" id="stoi-balanced-eq"></div>
     </div>
+  </div>
 
-    <!-- Standard mode: pick known compound and quantity -->
-    <div class="control-group" id="stoi-known-group">
-      <div class="group-title">KNOWN QUANTITY</div>
-      <label>Given Compound</label>
-      <select id="stoi-given-compound"></select>
-      <div class="two-col">
-        <div>
-          <label>Amount</label>
-          <input type="number" id="stoi-given-amount" value="1" min="0" step="0.001" />
+  <!-- ── MODE TOGGLE ── -->
+  <div class="stoi-section" id="stoi-mode-section" style="display:none;">
+    <div class="stoi-section-title">Step 2: Select Calculation Mode</div>
+    <div class="stoi-mode-toggle-row">
+      <span class="stoi-mode-label" id="stoi-label-standard">Standard Stoichiometry</span>
+      <label class="toggle-switch" style="margin:0 10px;">
+        <input type="checkbox" id="stoi-mode-chk" onchange="Stoichiometry.onModeToggle()" />
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="stoi-mode-label" id="stoi-label-limiting">Limiting Reactant</span>
+    </div>
+  </div>
+
+  <!-- ── STANDARD MODE INPUTS ── -->
+  <div class="stoi-section" id="stoi-standard-section" style="display:none;">
+    <div class="stoi-section-title">Step 3: Enter Known Quantity</div>
+    <div class="stoi-input-grid">
+      <div class="stoi-input-cell">
+        <label class="stoi-lbl">Given Compound</label>
+        <select id="stoi-given-sel" class="stoi-select"></select>
+      </div>
+      <div class="stoi-input-cell">
+        <label class="stoi-lbl">Amount</label>
+        <input type="number" id="stoi-given-amt" class="stoi-num-input" min="0" step="any" placeholder="0" />
+      </div>
+      <div class="stoi-input-cell">
+        <label class="stoi-lbl">Unit</label>
+        <div class="stoi-radio-row">
+          <label class="stoi-radio"><input type="radio" name="stoi-unit" value="mol" checked /> mol</label>
+          <label class="stoi-radio"><input type="radio" name="stoi-unit" value="g" /> g</label>
+          <label class="stoi-radio"><input type="radio" name="stoi-unit" value="kg" /> kg</label>
         </div>
-        <div>
-          <label>Unit</label>
-          <select id="stoi-given-unit">
-            <option value="mol">mol</option>
-            <option value="g">g (grams)</option>
-            <option value="L">L (gas @ STP)</option>
-            <option value="particles">particles</option>
-          </select>
+      </div>
+      <div class="stoi-input-cell">
+        <label class="stoi-lbl">Round to</label>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="number" id="stoi-sig-figs" class="stoi-num-input" value="4" min="1" max="10" step="1" style="width:60px;" />
+          <span style="font-size:12px;color:#8a8a9a;">decimal places</span>
         </div>
       </div>
-      <label>Target Compound</label>
-      <select id="stoi-target-compound"></select>
-      <label>Result Unit</label>
-      <select id="stoi-result-unit">
-        <option value="mol">mol</option>
-        <option value="g">g (grams)</option>
-        <option value="L">L (gas @ STP)</option>
-        <option value="particles">particles</option>
-      </select>
     </div>
+    <button class="stoi-calc-btn" onclick="Stoichiometry.calculateStandard()">🧮 Calculate Stoichiometry</button>
+  </div>
 
-    <!-- Limiting reactant mode: amounts for all reactants -->
-    <div class="control-group" id="stoi-limiting-group" style="display:none;">
-      <div class="group-title">REACTANT AMOUNTS</div>
-      <div class="mini-note" style="margin-bottom:8px;">Enter the available amount of each reactant.</div>
-      <div id="stoi-limiting-inputs"></div>
-      <label style="margin-top:8px;">Amount Unit</label>
-      <select id="stoi-limit-unit">
-        <option value="mol">mol</option>
-        <option value="g">g (grams)</option>
-      </select>
-      <label>Result Unit</label>
-      <select id="stoi-limit-result-unit">
-        <option value="mol">mol</option>
-        <option value="g">g (grams)</option>
-      </select>
-    </div>
-
-    <button class="action-btn primary" onclick="Stoichiometry.calculate()" style="margin-top:4px;">🧮 Calculate</button>
-    <button class="action-btn" onclick="Stoichiometry.clear()">Clear</button>
-
-    <div class="control-group">
-      <div class="group-title">QUICK EXAMPLES</div>
-      <div style="display:flex;flex-direction:column;gap:4px;">
-        <button class="style-btn" onclick="Stoichiometry.loadExample('combustion')">CH₄ + O₂ Combustion</button>
-        <button class="style-btn" onclick="Stoichiometry.loadExample('haber')">N₂ + H₂ → NH₃ (Haber)</button>
-        <button class="style-btn" onclick="Stoichiometry.loadExample('ironrust')">Iron Rusting</button>
+  <!-- ── LIMITING MODE INPUTS ── -->
+  <div class="stoi-section" id="stoi-limiting-section" style="display:none;">
+    <div class="stoi-section-title">Step 3: Enter Available Amounts for Each Reactant</div>
+    <div class="stoi-hint">Enter how much of each reactant you have available.</div>
+    <div id="stoi-limit-inputs-container"></div>
+    <div class="stoi-input-grid" style="margin-top:10px;">
+      <div class="stoi-input-cell">
+        <label class="stoi-lbl">Round to</label>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="number" id="stoi-limit-sig-figs" class="stoi-num-input" value="4" min="1" max="10" step="1" style="width:60px;" />
+          <span style="font-size:12px;color:#8a8a9a;">decimal places</span>
+        </div>
       </div>
     </div>
+    <button class="stoi-calc-btn" onclick="Stoichiometry.calculateLimiting()">🧮 Calculate Limiting Reactant</button>
+  </div>
 
-  </aside>
-
-  <div class="preview-panel">
-    <div class="preview-label">Results — stoichiometric calculations with mole ratios</div>
-    <div class="results-scroll-wrapper">
-      <div class="results-sheet" id="stoi-results">
-        <div class="placeholder-msg">🧮 Set up your balanced equation and known quantity, then click <strong>Calculate</strong>.</div>
+  <!-- ── RESULTS ── -->
+  <div id="stoi-results-section" style="display:none;">
+    <div class="stoi-section">
+      <div id="stoi-results-content"></div>
+      <div style="margin-top:12px;text-align:right;">
+        <button class="stoi-export-btn" onclick="Stoichiometry.exportPNG()">⬇ Export Results as PNG</button>
       </div>
     </div>
   </div>
+
 </div>
