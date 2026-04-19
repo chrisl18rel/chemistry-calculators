@@ -1,91 +1,92 @@
-<!-- stoichiometry.html -->
-<div class="stoi-fullpage">
+<!-- index.html -->
 
-  <!-- ── EQUATION INPUT ── -->
-  <div class="stoi-section">
-    <div class="stoi-section-title">Step 1: Enter Chemical Equation</div>
-    <div class="stoi-hint">Paste or type a full equation. Blanks, state symbols, and existing coefficients are stripped automatically.</div>
-    <div class="stoi-eq-row">
-      <textarea id="stoi-eq-input" class="stoi-eq-textarea formula-input"
-        placeholder="e.g. H2 + O2 → H2O   or   ___Al4C3 + ___H2O → ___CH4 + ___Al(OH)3"
-        autocomplete="off" autocorrect="off" spellcheck="false" rows="2"></textarea>
-      <button class="stoi-balance-btn" onclick="Stoichiometry.balanceStep()">⚖️ Balance</button>
-    </div>
-    <div id="stoi-balanced-display" style="display:none;">
-      <div class="stoi-balanced-label">Balanced Equation:</div>
-      <div class="stoi-balanced-eq" id="stoi-balanced-eq"></div>
-    </div>
-  </div>
+<!DOCTYPE html>
 
-  <!-- ── MODE TOGGLE ── -->
-  <div class="stoi-section" id="stoi-mode-section" style="display:none;">
-    <div class="stoi-section-title">Step 2: Select Calculation Mode</div>
-    <div class="stoi-mode-toggle-row">
-      <span class="stoi-mode-label" id="stoi-label-standard">Standard Stoichiometry</span>
-      <label class="toggle-switch" style="margin:0 10px;">
-        <input type="checkbox" id="stoi-mode-chk" onchange="Stoichiometry.onModeToggle()" />
-        <span class="toggle-slider"></span>
-      </label>
-      <span class="stoi-mode-label" id="stoi-label-limiting">Limiting Reactant</span>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chemistry Calculators</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-logo">
+    <div class="logo-icon">⚗️</div>
+    <div class="logo-text">
+      <h1>Chemistry Calculators</h1>
+      <p>Molar mass · Equation balancing · Stoichiometry · Composition · Yield · Empirical formula</p>
     </div>
   </div>
+  <div class="app-version">v1.0</div>
+</header>
 
-  <!-- ── STANDARD MODE INPUTS ── -->
-  <div class="stoi-section" id="stoi-standard-section" style="display:none;">
-    <div class="stoi-section-title">Step 3: Enter Known Quantity</div>
-    <div class="stoi-input-grid">
-      <div class="stoi-input-cell">
-        <label class="stoi-lbl">Given Compound</label>
-        <select id="stoi-given-sel" class="stoi-select"></select>
-      </div>
-      <div class="stoi-input-cell">
-        <label class="stoi-lbl">Amount</label>
-        <input type="number" id="stoi-given-amt" class="stoi-num-input" min="0" step="any" placeholder="0" />
-      </div>
-      <div class="stoi-input-cell">
-        <label class="stoi-lbl">Unit</label>
-        <div class="stoi-radio-row">
-          <label class="stoi-radio"><input type="radio" name="stoi-unit" value="mol" checked /> mol</label>
-          <label class="stoi-radio"><input type="radio" name="stoi-unit" value="g" /> g</label>
-          <label class="stoi-radio"><input type="radio" name="stoi-unit" value="kg" /> kg</label>
-        </div>
-      </div>
-      <div class="stoi-input-cell">
-        <label class="stoi-lbl">Round to</label>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <input type="number" id="stoi-sig-figs" class="stoi-num-input" value="4" min="1" max="10" step="1" style="width:60px;" />
-          <span style="font-size:12px;color:#8a8a9a;">decimal places</span>
-        </div>
-      </div>
-    </div>
-    <button class="stoi-calc-btn" onclick="Stoichiometry.calculateStandard()">🧮 Calculate Stoichiometry</button>
-  </div>
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="molar-mass">⚛️ Molar Mass</button>
+  <button class="tab-btn" data-tab="equation-balancer">⚖️ Equation Balancer</button>
+  <button class="tab-btn" data-tab="redox-balancer">🔋 Redox Balancer</button>
+  <button class="tab-btn" data-tab="stoichiometry">🧮 Stoichiometry</button>
+  <button class="tab-btn" data-tab="percent-composition">📊 % Composition</button>
+  <button class="tab-btn" data-tab="percent-yield">📈 % Yield</button>
+  <button class="tab-btn" data-tab="empirical-molecular">🔬 Empirical / Molecular</button>
+</nav>
 
-  <!-- ── LIMITING MODE INPUTS ── -->
-  <div class="stoi-section" id="stoi-limiting-section" style="display:none;">
-    <div class="stoi-section-title">Step 3: Enter Available Amounts for Each Reactant</div>
-    <div class="stoi-hint">Enter how much of each reactant you have available.</div>
-    <div id="stoi-limit-inputs-container"></div>
-    <div class="stoi-input-grid" style="margin-top:10px;">
-      <div class="stoi-input-cell">
-        <label class="stoi-lbl">Round to</label>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <input type="number" id="stoi-limit-sig-figs" class="stoi-num-input" value="4" min="1" max="10" step="1" style="width:60px;" />
-          <span style="font-size:12px;color:#8a8a9a;">decimal places</span>
-        </div>
-      </div>
-    </div>
-    <button class="stoi-calc-btn" onclick="Stoichiometry.calculateLimiting()">🧮 Calculate Limiting Reactant</button>
-  </div>
+<main class="app-body">
 
-  <!-- ── RESULTS ── -->
-  <div id="stoi-results-section" style="display:none;">
-    <div class="stoi-section">
-      <div id="stoi-results-content"></div>
-      <div style="margin-top:12px;text-align:right;">
-        <button class="stoi-export-btn" onclick="Stoichiometry.exportPNG()">⬇ Export Results as PNG</button>
-      </div>
-    </div>
-  </div>
+  <section id="tab-molar-mass" class="tab-panel active">
+    <div id="molar-mass-container"></div>
+  </section>
 
-</div>
+  <section id="tab-equation-balancer" class="tab-panel">
+    <div id="equation-balancer-container"></div>
+  </section>
+
+  <section id="tab-redox-balancer" class="tab-panel">
+    <div id="redox-balancer-container"></div>
+  </section>
+
+  <section id="tab-stoichiometry" class="tab-panel">
+    <div id="stoichiometry-container"></div>
+  </section>
+
+  <section id="tab-percent-composition" class="tab-panel">
+    <div id="percent-composition-container"></div>
+  </section>
+
+  <section id="tab-percent-yield" class="tab-panel">
+    <div id="percent-yield-container"></div>
+  </section>
+
+  <section id="tab-empirical-molecular" class="tab-panel">
+    <div id="empirical-molecular-container"></div>
+  </section>
+
+</main>
+
+<!-- Styled alert container -->
+
+<div id="alert-container"></div>
+
+<script src="formula-parser.js"></script>
+
+<script src="app.js"></script>
+
+<script src="molar-mass.js"></script>
+
+<script src="equation-balancer.js"></script>
+
+<script src="redox-engine.js"></script>
+
+<script src="redox-balancer.js"></script>
+
+<script src="stoichiometry.js"></script>
+
+<script src="percent-composition.js"></script>
+
+<script src="percent-yield.js"></script>
+
+<script src="empirical-molecular.js"></script>
+
+</body>
+</html>
