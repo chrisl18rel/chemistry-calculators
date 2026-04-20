@@ -17,7 +17,7 @@
       <p>Molar mass · Equation balancing · Stoichiometry · Composition · Yield · Empirical formula</p>
     </div>
   </div>
-  <div class="app-version">v3.9</div>
+  <div class="app-version">v4.0</div>
 </header>
 
 <nav class="tab-nav">
@@ -536,7 +536,9 @@
     <div class="control-group">
       <div class="group-title">CALCULATION MODE</div>
       <div style="display:flex;flex-direction:column;gap:4px;">
-        <button class="style-btn active" id="ph-mode-strong-acid"  onclick="PhCalculator.setMode('strong-acid')">Strong Acid</button>
+        <button class="style-btn active" id="ph-mode-smart"       onclick="PhCalculator.setMode('smart')" style="background:var(--accent);color:#fff;border-color:var(--accent);">🔍 Smart Mode</button>
+        <div class="display-divider" style="margin:2px 0;"></div>
+        <button class="style-btn"        id="ph-mode-strong-acid"  onclick="PhCalculator.setMode('strong-acid')">Strong Acid</button>
         <button class="style-btn"        id="ph-mode-strong-base"  onclick="PhCalculator.setMode('strong-base')">Strong Base</button>
         <button class="style-btn"        id="ph-mode-weak-acid"    onclick="PhCalculator.setMode('weak-acid')">Weak Acid</button>
         <button class="style-btn"        id="ph-mode-weak-base"    onclick="PhCalculator.setMode('weak-base')">Weak Base</button>
