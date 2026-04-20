@@ -649,7 +649,7 @@ function buildHalfReaction(leftSpecies, rightSpecies, medium) {
   const step5R = step4R + (eRightCount ? ` + ${eStr(eRightCount)}` : '');
 
   const finalLCharge = totalLCharge - eLeftCount;
-  const finalRCharge = totalRCharge + eRightCount;
+  const finalRCharge = totalRCharge - eRightCount;
 
   steps.push({
     label: 'Balance charge by adding electrons (e⁻)',
