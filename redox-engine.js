@@ -686,7 +686,6 @@ function buildHalfReaction(leftSpecies, rightSpecies, medium) {
   const isOxidation = eRightCount > 0;
 
   // Build structured species lists for the final balanced half-reaction
-  // (before HTML conversion) so combiner can work with raw objects
   const finalLeftSpecies  = [...scaleSpecies(scaledL, 1)];
   const finalRightSpecies = [...scaleSpecies(scaledR, 1)];
   if (h2oLeftCount)  finalLeftSpecies.push( { formula:'H2O', charge:0, coeff:h2oLeftCount  });
@@ -695,6 +694,35 @@ function buildHalfReaction(leftSpecies, rightSpecies, medium) {
   if (hRightCount)   finalRightSpecies.push({ formula:'H',   charge:1, coeff:hRightCount   });
   if (eLeftCount)    finalLeftSpecies.push( { formula:'e',   charge:-1, coeff:eLeftCount   });
   if (eRightCount)   finalRightSpecies.push({ formula:'e',   charge:-1, coeff:eRightCount  });
+
+  // For basic solution: convert H⁺ in species lists to OH⁻ and H₂O
+  // Mirror exactly what was done to the display strings above
+  if (medium === 'basic') {
+    const totalH = hLeftCount + hRightCount;
+    if (totalH > 0) {
+      if (hLeftCount > 0) {
+        // H⁺ was on the left → replace with H₂O on left, add OH⁻ to right
+        // Remove H from left
+        const hIdx = finalLeftSpecies.findIndex(s => s.formula === 'H' && s.charge === 1);
+        if (hIdx >= 0) finalLeftSpecies.splice(hIdx, 1);
+        // Add H2O to left (H⁺ + OH⁻ → H₂O, so hLeftCount waters replace hLeftCount H⁺)
+        const existingH2OLeft = finalLeftSpecies.find(s => s.formula === 'H2O');
+        if (existingH2OLeft) existingH2OLeft.coeff += hLeftCount;
+        else finalLeftSpecies.push({ formula:'H2O', charge:0, coeff:hLeftCount });
+        // Add OH⁻ to right
+        finalRightSpecies.push({ formula:'OH', charge:-1, coeff:hLeftCount });
+      } else if (hRightCount > 0) {
+        // H⁺ was on the right → replace with H₂O on right, add OH⁻ to left
+        const hIdx = finalRightSpecies.findIndex(s => s.formula === 'H' && s.charge === 1);
+        if (hIdx >= 0) finalRightSpecies.splice(hIdx, 1);
+        const existingH2ORight = finalRightSpecies.find(s => s.formula === 'H2O');
+        if (existingH2ORight) existingH2ORight.coeff += hRightCount;
+        else finalRightSpecies.push({ formula:'H2O', charge:0, coeff:hRightCount });
+        // Add OH⁻ to left
+        finalLeftSpecies.push({ formula:'OH', charge:-1, coeff:hRightCount });
+      }
+    }
+  }
 
   return { steps, electrons, isOxidation, finalLeft, finalRight,
            eLeftCount, eRightCount, lCoeff, rCoeff,
