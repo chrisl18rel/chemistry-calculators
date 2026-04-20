@@ -685,9 +685,21 @@ function buildHalfReaction(leftSpecies, rightSpecies, medium) {
   const electrons = Math.max(eLeftCount, eRightCount);
   const isOxidation = eRightCount > 0;
 
+  // Build structured species lists for the final balanced half-reaction
+  // (before HTML conversion) so combiner can work with raw objects
+  const finalLeftSpecies  = [...scaleSpecies(scaledL, 1)];
+  const finalRightSpecies = [...scaleSpecies(scaledR, 1)];
+  if (h2oLeftCount)  finalLeftSpecies.push( { formula:'H2O', charge:0, coeff:h2oLeftCount  });
+  if (h2oRightCount) finalRightSpecies.push({ formula:'H2O', charge:0, coeff:h2oRightCount });
+  if (hLeftCount)    finalLeftSpecies.push( { formula:'H',   charge:1, coeff:hLeftCount    });
+  if (hRightCount)   finalRightSpecies.push({ formula:'H',   charge:1, coeff:hRightCount   });
+  if (eLeftCount)    finalLeftSpecies.push( { formula:'e',   charge:-1, coeff:eLeftCount   });
+  if (eRightCount)   finalRightSpecies.push({ formula:'e',   charge:-1, coeff:eRightCount  });
+
   return { steps, electrons, isOxidation, finalLeft, finalRight,
            eLeftCount, eRightCount, lCoeff, rCoeff,
-           h2oLeftCount, h2oRightCount, hLeftCount, hRightCount };
+           h2oLeftCount, h2oRightCount, hLeftCount, hRightCount,
+           finalLeftSpecies, finalRightSpecies };
 }
 
 // ── Helpers ──
