@@ -134,7 +134,7 @@ const EqBalancer = (() => {
     const pCoeffs = coeffs.slice(reactants.length);
 
     // Build balanced equation display string
-    const coeff = (n) => n === 1 ? '' : `<span style="color:#e94560;font-weight:700;">${n}</span>`;
+    const coeff = (n) => n === 1 ? '' : `<span style="color:#e94560;font-weight:700;">${n}</span> `;
     const rSide = reactants.map((f, i) => coeff(rCoeffs[i]) + formulaToHTML(f)).join(' + ');
     const pSide = products.map((f, i)  => coeff(pCoeffs[i]) + formulaToHTML(f)).join(' + ');
     const eqStr = rSide + ' → ' + pSide;
