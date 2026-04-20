@@ -158,17 +158,19 @@
   <aside class="controls-panel">
 
     <div class="control-group">
-      <div class="group-title">MOLECULAR EQUATION INPUT</div>
+      <div class="group-title">EQUATION INPUT</div>
       <div class="mini-note" style="margin-bottom:8px;">
-        Enter the full molecular equation with state symbols. State symbols are required — they tell the tool which compounds dissociate into ions.
+        Enter the equation below. You can enter either a <strong>molecular equation</strong> (with state symbols) or a <strong>net ionic equation</strong> (with charges in curly braces).
       </div>
       <textarea id="rx-equation" class="formula-input" rows="4"
         placeholder="e.g. Zn(s) + CuSO4(aq) → ZnSO4(aq) + Cu(s)"
         autocomplete="off" autocorrect="off" spellcheck="false"
         style="resize:vertical;line-height:1.6;"></textarea>
-      <div class="mini-note" style="margin-top:4px;">
-        <strong>State symbols:</strong> (s) solid · (l) liquid · (g) gas · (aq) dissolved in water<br>
-        Use → or -> for the arrow. Ctrl+Enter to submit.
+      <div class="mini-note" style="margin-top:6px;background:rgba(74,144,226,0.08);border:1px solid rgba(74,144,226,0.2);border-radius:4px;padding:8px;">
+        <strong>Writing ion charges:</strong> Put the charge in curly braces <strong>{ }</strong> directly after the formula.<br>
+        <span style="color:var(--accent);">I3{-1} &nbsp;·&nbsp; S2O3{2-} &nbsp;·&nbsp; Fe{2+} &nbsp;·&nbsp; MnO4{-} &nbsp;·&nbsp; NH4{+}</span><br><br>
+        <strong>State symbols</strong> (for molecular equations): (s) (l) (g) (aq)<br>
+        <strong>Arrow:</strong> → or ->  &nbsp;|&nbsp; <strong>Submit:</strong> Ctrl+Enter
       </div>
       <div class="display-divider"></div>
       <label>Reaction Medium</label>
@@ -184,22 +186,30 @@
     <div class="control-group">
       <div class="group-title">QUICK EXAMPLES</div>
       <div style="display:flex;flex-direction:column;gap:4px;">
-        <button class="style-btn" onclick="RedoxBalancer.loadExample('zncu')">Zn + CuSO₄ (single replacement)</button>
-        <button class="style-btn" onclick="RedoxBalancer.loadExample('feag')">Cu + AgNO₃ (single replacement)</button>
-        <button class="style-btn" onclick="RedoxBalancer.loadExample('ironrust')">Fe + HCl (acid-metal)</button>
+        <button class="style-btn" onclick="RedoxBalancer.loadExample('zncu')">Zn + CuSO₄ (molecular)</button>
+        <button class="style-btn" onclick="RedoxBalancer.loadExample('feag')">Cu + AgNO₃ (molecular)</button>
+        <button class="style-btn" onclick="RedoxBalancer.loadExample('ironrust')">Fe + HCl (molecular)</button>
         <button class="style-btn" onclick="RedoxBalancer.loadExample('i3s2o3')">I₃⁻ + S₂O₃²⁻ (net ionic)</button>
+        <button class="style-btn" onclick="RedoxBalancer.loadExample('femn')">Fe²⁺ + MnO₄⁻ (net ionic)</button>
       </div>
     </div>
 
     <div class="control-group">
-      <div class="group-title">TIPS</div>
+      <div class="group-title">HOW TO ENTER IONS</div>
       <div class="mini-note">
-        • <strong>State symbols are required</strong> — (aq) compounds are split into ions; (s), (l), (g) stay as formula units<br>
-        • Solubility rules and weak acid/base rules are applied automatically<br>
-        • Spectator ions are identified and cancelled to give the net ionic equation<br>
-        • Oxidation numbers are assigned automatically — fractional states supported<br>
-        • Steps follow the half-reaction method for acidic or basic solutions<br>
-        • For very complex multi-element redox, results may need manual verification
+        <strong>Always use curly braces for charges:</strong><br><br>
+        <table style="width:100%;font-size:11px;border-collapse:collapse;">
+          <tr><td style="color:var(--accent);padding:2px 0;font-family:monospace;">I3{-1}</td><td style="color:var(--text-dim);padding:2px 4px;">triiodide, I₃⁻</td></tr>
+          <tr><td style="color:var(--accent);padding:2px 0;font-family:monospace;">S2O3{2-}</td><td style="color:var(--text-dim);padding:2px 4px;">thiosulfate, S₂O₃²⁻</td></tr>
+          <tr><td style="color:var(--accent);padding:2px 0;font-family:monospace;">MnO4{-}</td><td style="color:var(--text-dim);padding:2px 4px;">permanganate, MnO₄⁻</td></tr>
+          <tr><td style="color:var(--accent);padding:2px 0;font-family:monospace;">Fe{2+}</td><td style="color:var(--text-dim);padding:2px 4px;">iron(II) ion, Fe²⁺</td></tr>
+          <tr><td style="color:var(--accent);padding:2px 0;font-family:monospace;">Cr2O7{2-}</td><td style="color:var(--text-dim);padding:2px 4px;">dichromate, Cr₂O₇²⁻</td></tr>
+          <tr><td style="color:var(--accent);padding:2px 0;font-family:monospace;">NH4{+}</td><td style="color:var(--text-dim);padding:2px 4px;">ammonium, NH₄⁺</td></tr>
+        </table>
+        <br>Neutral compounds like <span style="color:var(--accent);font-family:monospace;">CuSO4</span>, <span style="color:var(--accent);font-family:monospace;">Fe</span>, <span style="color:var(--accent);font-family:monospace;">H2O</span> need no braces.<br><br>
+        • Solubility rules auto-applied to molecular (aq) equations<br>
+        • Spectator ions cancelled automatically<br>
+        • Fractional oxidation states supported (e.g. I₃⁻ = −⅓)
       </div>
     </div>
 
