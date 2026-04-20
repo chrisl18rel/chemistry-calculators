@@ -7,6 +7,7 @@ const RedoxBalancer = (() => {
     zncu:    'Zn(s) + CuSO4(aq) → ZnSO4(aq) + Cu(s)',
     feag:    'Cu(s) + AgNO3(aq) → Cu(NO3)2(aq) + Ag(s)',
     ironrust:'Fe(s) + HCl(aq) → FeCl2(aq) + H2(g)',
+    i3s2o3: 'I3- + S2O32- → I-1 + S4O62-',
   };
 
   function init() {
