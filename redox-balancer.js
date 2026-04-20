@@ -10,21 +10,15 @@ const RedoxBalancer = (() => {
   };
 
   function init() {
-    fetch('redox-balancer.html')
-      .then(r => r.text())
-      .then(html => {
-        loadTemplate('redox-balancer-container', html);
-        setMedium('acidic');
-        const ta = document.getElementById('rx-equation');
-        if (ta) {
-          ta.addEventListener('keydown', e => {
-            if (e.key === 'Enter' && (e.ctrlKey || e.shiftKey)) {
-              e.preventDefault(); balance();
-            }
-          });
+    setMedium('acidic');
+    const ta = document.getElementById('rx-equation');
+    if (ta) {
+      ta.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.shiftKey)) {
+          e.preventDefault(); balance();
         }
-      })
-      .catch(() => {});
+      });
+    }
   }
 
   function setMedium(m) {
