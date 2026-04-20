@@ -67,10 +67,13 @@ const MolarMass = (() => {
 
       for (const row of breakdown) {
         const pct = (row.contribution / mass * 100).toFixed(2);
+        // Display atomic mass with enough decimal places to show full precision
+        // e.g. 1.00794 stays 1.00794, not 1.0079
+        const amDisplay = parseFloat(row.atomicMass.toFixed(5)).toString();
         html += `<tr>
           <td><strong>${row.element}</strong></td>
           <td class="num">${row.count}</td>
-          <td class="num">${row.atomicMass.toFixed(4)}</td>
+          <td class="num">${amDisplay}</td>
           <td class="num">${row.contribution.toFixed(4)}</td>
           ${showPercent ? `<td><span class="result-badge blue">${pct}%</span></td>` : ''}
         </tr>`;
