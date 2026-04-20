@@ -3,14 +3,8 @@
 const PercentComposition = (() => {
 
   function init() {
-    fetch('percent-composition.html')
-      .then(r => r.text())
-      .then(html => {
-        loadTemplate('percent-composition-container', html);
-        const inp = document.getElementById('pc-formula');
-        if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
-      })
-      .catch(() => {});
+    const inp = document.getElementById('pc-formula');
+    if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
   }
 
   function calculate() {
