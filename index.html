@@ -28,6 +28,7 @@
   <button class="tab-btn" data-tab="percent-composition">📊 % Composition</button>
   <button class="tab-btn" data-tab="percent-yield">📈 % Yield</button>
   <button class="tab-btn" data-tab="empirical-molecular">🔬 Empirical / Molecular</button>
+  <button class="tab-btn" data-tab="ph-calculator">🧪 pH Calculator</button>
 </nav>
 
 <main class="app-body">
@@ -528,6 +529,57 @@
 </div>
   </section>
 
+  <section id="tab-ph-calculator" class="tab-panel">
+<div class="panel-layout">
+  <aside class="controls-panel">
+
+    <div class="control-group">
+      <div class="group-title">CALCULATION MODE</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <button class="style-btn active" id="ph-mode-strong-acid"  onclick="PhCalculator.setMode('strong-acid')">Strong Acid</button>
+        <button class="style-btn"        id="ph-mode-strong-base"  onclick="PhCalculator.setMode('strong-base')">Strong Base</button>
+        <button class="style-btn"        id="ph-mode-weak-acid"    onclick="PhCalculator.setMode('weak-acid')">Weak Acid</button>
+        <button class="style-btn"        id="ph-mode-weak-base"    onclick="PhCalculator.setMode('weak-base')">Weak Base</button>
+        <button class="style-btn"        id="ph-mode-buffer"       onclick="PhCalculator.setMode('buffer')">Buffer Solution</button>
+        <button class="style-btn"        id="ph-mode-titration"    onclick="PhCalculator.setMode('titration')">Titration Curve</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">INPUTS</div>
+      <div id="ph-input-fields"></div>
+    </div>
+
+    <button class="action-btn primary" onclick="PhCalculator.calculate()">🧪 Calculate</button>
+    <button class="action-btn" onclick="PhCalculator.clearAll()">Clear</button>
+
+    <div class="control-group">
+      <div class="group-title">REFERENCE</div>
+      <div class="mini-note">
+        <strong>Key relationships:</strong><br>
+        pH + pOH = 14.00<br>
+        Ka × Kb = Kw = 1.0 × 10⁻¹⁴<br>
+        pKa + pKb = 14.00<br>
+        pH = −log[H₃O⁺]<br>
+        pOH = −log[OH⁻]<br><br>
+        <strong>Scientific notation:</strong><br>
+        Enter 1.8 × 10⁻⁵ as <code>1.8e-5</code>
+      </div>
+    </div>
+
+  </aside>
+
+  <div class="preview-panel">
+    <div class="preview-label">Results — pH, pOH, Ka, Kb, and step-by-step solution</div>
+    <div class="results-scroll-wrapper">
+      <div class="results-sheet" id="ph-results">
+        <div class="placeholder-msg">🧪 Select a calculation mode, fill in the fields, and click <strong>Calculate</strong>.</div>
+      </div>
+    </div>
+  </div>
+</div>
+  </section>
+
 </main>
 
 <div id="alert-container"></div>
@@ -542,6 +594,7 @@
 <script src="percent-composition.js"></script>
 <script src="percent-yield.js"></script>
 <script src="empirical-molecular.js"></script>
+<script src="ph-calculator.js"></script>
 
 </body>
 </html>
