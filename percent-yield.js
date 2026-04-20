@@ -10,13 +10,7 @@ const PercentYield = (() => {
   };
 
   function init() {
-    fetch('percent-yield.html')
-      .then(r => r.text())
-      .then(html => {
-        loadTemplate('percent-yield-container', html);
-        setMode('yield');
-      })
-      .catch(() => {});
+    setMode('yield');
   }
 
   function setMode(m) {
@@ -173,13 +167,10 @@ const PercentYield = (() => {
     const ex = EXAMPLES[key];
     if (!ex) return;
     setMode(ex.mode);
-    // Small delay to let buildFields run
-    setTimeout(() => {
-      if (ex.actual      !== null) { const el = document.getElementById('py-actual');       if (el) el.value = ex.actual; }
-      if (ex.theoretical !== null) { const el = document.getElementById('py-theoretical');  if (el) el.value = ex.theoretical; }
-      if (ex.pct         !== null) { const el = document.getElementById('py-pct');          if (el) el.value = ex.pct; }
-      calculate();
-    }, 50);
+    if (ex.actual      !== null) { const el = document.getElementById('py-actual');       if (el) el.value = ex.actual; }
+    if (ex.theoretical !== null) { const el = document.getElementById('py-theoretical');  if (el) el.value = ex.theoretical; }
+    if (ex.pct         !== null) { const el = document.getElementById('py-pct');          if (el) el.value = ex.pct; }
+    calculate();
   }
 
   return { init, calculate, clear, setMode, loadExample };
