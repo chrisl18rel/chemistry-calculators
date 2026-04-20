@@ -241,7 +241,7 @@ function parseMolecularCompound(token) {
 
   // Strip leading blanks/underscores
   s = s.replace(/^_+/, '').trim();
-  // Strip leading coefficient
+  // Strip leading coefficient (digit before capital letter or open paren)
   s = s.replace(/^\d+(?=[A-Z(])/, '').trim();
 
   // Extract state: (s), (l), (g), (aq) at the END of the token
@@ -252,27 +252,70 @@ function parseMolecularCompound(token) {
     s = s.slice(0, stateMatch.index).trim();
   }
 
-  // Remove any remaining whitespace
+  // Extract ion charge BEFORE removing whitespace
+  // Handles multiple notations:
+  //   "2-", "3+", "-", "+"    → mag then sign
+  //   "-1", "+2", "-2"        → sign then mag (e.g. I-1, Fe+2)
+  let charge = 0;
+  // Pattern A: digits then sign: "2-", "3+", "2+"
+  const chargeMatchA = s.match(/\s+(\d+)([+\-])\s*$/);
+  // Pattern B: sign then digits at end: "-1", "+2" (with optional space before)
+  const chargeMatchB = s.match(/([+\-])(\d+)\s*$/);
+  // Pattern C: bare sign at end: "-", "+"
+  const chargeMatchC = s.match(/\s+([+\-])\s*$/);
+
+  if (chargeMatchA) {
+    const sign = chargeMatchA[2] === '+' ? +1 : -1;
+    charge = sign * parseInt(chargeMatchA[1]);
+    s = s.slice(0, s.length - chargeMatchA[0].length).trim();
+  } else if (chargeMatchB) {
+    // Make sure this is actually trailing charge, not part of formula
+    // e.g. "I-1" — the "-1" at end is charge, formula is "I"
+    const sign = chargeMatchB[1] === '+' ? +1 : -1;
+    charge = sign * parseInt(chargeMatchB[2]);
+    s = s.slice(0, s.length - chargeMatchB[0].length).trim();
+  } else if (chargeMatchC) {
+    charge = chargeMatchC[1] === '+' ? +1 : -1;
+    s = s.slice(0, s.length - chargeMatchC[0].length).trim();
+  } else {
+    // Pattern D: sign directly appended with no space e.g. "MnO4-", "Fe2+", "S2O32-"
+    const chargeMatchD = s.match(/(\d*)([+\-])$/);
+    if (chargeMatchD) {
+      const sign = chargeMatchD[2] === '+' ? +1 : -1;
+      const mag  = chargeMatchD[1] ? parseInt(chargeMatchD[1]) : 1;
+      charge = sign * mag;
+      s = s.slice(0, s.length - chargeMatchD[0].length).trim();
+    }
+  }
+
+  // Remove any remaining whitespace inside formula
   s = s.replace(/\s+/g, '');
   if (!s) return null;
 
-  return { formula: s, state };
+  return { formula: s, state, charge };
 }
 
 // ═══════════════════════════════════════════════════════════════
 // BUILD NET IONIC EQUATION
 // ═══════════════════════════════════════════════════════════════
 function buildNetIonic(reactants, products) {
-  // Expand (aq) ionic compounds into their ions
+  // Expand (aq) ionic compounds into their ions.
+  // If a species has an explicit charge (parsed from the input), treat it as
+  // already ionic — this handles net ionic equations entered directly.
   const expandSide = (compounds) => {
     const expanded = [];
     for (const c of compounds) {
+      // Try database dissociation first (for molecular equations with state symbols)
       const ions = getIons(c.formula, c.state);
       if (ions) {
         for (const ion of ions) {
           expanded.push({ formula: ion.formula, charge: ion.charge, count: ion.count, isIon: true, parent: c.formula });
         }
+      } else if (c.charge !== 0 && c.charge !== undefined) {
+        // Species has explicit charge from input — already an ion
+        expanded.push({ formula: c.formula, charge: c.charge, count: 1, isIon: true, parent: c.formula });
       } else {
+        // Neutral or unknown — keep as formula unit
         expanded.push({ formula: c.formula, charge: 0, count: 1, isIon: false, state: c.state, parent: c.formula });
       }
     }
@@ -345,11 +388,14 @@ function assignOxidationNumbers(formula, charge) {
   const elements = Object.entries(atoms); // [[el, count], ...]
 
   // Special cases first
-  // Elemental form: all zeros
   const uniqueEls = new Set(Object.keys(atoms));
+  // Single-element species: ON = charge / count (may be fractional, e.g. I3- → -1/3)
+  // Elemental form (charge 0) → ON = 0; Ion like I3- (charge -1) → ON = -1/3
   if (uniqueEls.size === 1) {
     const [el, cnt] = elements[0];
-    return [{ element: el, count: cnt, oxidationNumber: 0, isFractional: false }];
+    const on = (charge || 0) / cnt;
+    const isFrac = !Number.isInteger(on);
+    return [{ element: el, count: cnt, oxidationNumber: on, isFractional: isFrac }];
   }
 
   // Peroxides: O2 2- type or H2O2
@@ -467,13 +513,13 @@ function identifyRedoxChanges(netR, netP) {
         const change = pON - rON;
         changes.push({
           element: el,
-          reactantFormula: rONmap[el].formula,
-          productFormula:  pONmap[el].formula,
+          reactantFormula:  rONmap[el].formula,
+          productFormula:   pONmap[el].formula,
+          reactantCharge:   rONmap[el].charge,
+          productCharge:    pONmap[el].charge,
           reactantON: rON,
           productON:  pON,
           type: change > 0 ? 'oxidation' : 'reduction',
-          // Oxidized = lost electrons = ON increased
-          // Reduced  = gained electrons = ON decreased
         });
       }
     }
@@ -724,12 +770,12 @@ function solveRedox(raw, medium) {
 
   // 7. Get oxidation numbers for all changing species for display
   const oxNumbers = {
-    reactant: assignOxidationNumbers(oxidationChange.reactantFormula, 0),
-    product:  assignOxidationNumbers(oxidationChange.productFormula,  0),
+    reactant: assignOxidationNumbers(oxidationChange.reactantFormula, oxidationChange.reactantCharge || 0),
+    product:  assignOxidationNumbers(oxidationChange.productFormula,  oxidationChange.productCharge  || 0),
   };
   const redNumbers = {
-    reactant: assignOxidationNumbers(reductionChange.reactantFormula, 0),
-    product:  assignOxidationNumbers(reductionChange.productFormula,  0),
+    reactant: assignOxidationNumbers(reductionChange.reactantFormula, reductionChange.reactantCharge || 0),
+    product:  assignOxidationNumbers(reductionChange.productFormula,  reductionChange.productCharge  || 0),
   };
 
   return {
