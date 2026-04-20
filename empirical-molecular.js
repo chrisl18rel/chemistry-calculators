@@ -169,12 +169,12 @@ const EmpiricalMolecular = (() => {
 
     // Validate
     if (rows.some(r => !r.element)) { showAlert('All elements must have a symbol.', true); return; }
-    if (rows.some(r => r.value === '' || isNaN(parseFloat(r.value)))) {
+    if (rows.some(r => r.value === '' || isNaN(parseFloat(r.value.replace('%', '').trim())))) {
       showAlert('All elements must have a value.', true); return;
     }
 
     const elements = rows.map(r => r.element);
-    const values   = rows.map(r => parseFloat(r.value));
+    const values   = rows.map(r => parseFloat(r.value.replace('%', '').trim()));
 
     // Check for unknown elements
     for (const el of elements) {
