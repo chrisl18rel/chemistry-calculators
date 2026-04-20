@@ -75,9 +75,11 @@ const RedoxBalancer = (() => {
   }
 
   function renderMolecularEq(sol) {
-    const side = (arr) => arr.map(c =>
-      `${formulaToHTML(c.formula)}<span style="font-size:10px;color:#888;">(${c.state||''})</span>`
-    ).join(' + ');
+    const side = (arr) => arr.map(c => {
+      // If no state symbol was provided but the species has a charge, it's an ion → (aq)
+      const stateLabel = c.state || (c.charge !== 0 ? 'aq' : '');
+      return `${formulaToHTML(c.formula)}<span style="font-size:10px;color:#888;">${stateLabel ? `(${stateLabel})` : ''}</span>`;
+    }).join(' + ');
     return `<div class="rx-eq">${side(sol.molecular.reactants)} → ${side(sol.molecular.products)}</div>`;
   }
 
