@@ -3,26 +3,15 @@
 const MolarMass = (() => {
 
   function init() {
-    fetch('molar-mass.html')
-      .then(r => r.text())
-      .then(html => {
-        loadTemplate('molar-mass-container', html);
-        // Enter key triggers calculate
-        const input = document.getElementById('mm-formula');
-        if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
-        // Checkbox listeners
-        ['mm-show-breakdown','mm-show-percent'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.addEventListener('change', () => {
-            const f = document.getElementById('mm-formula');
-            if (f && f.value.trim()) calculate();
-          });
-        });
-      })
-      .catch(() => {
-        // Fallback if fetch not available (file:// protocol)
-        loadTemplate('molar-mass-container', '<div style="padding:20px;color:var(--text-dim)">Load via a local server to use file includes.</div>');
+    const input = document.getElementById('mm-formula');
+    if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
+    ['mm-show-breakdown','mm-show-percent'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', () => {
+        const f = document.getElementById('mm-formula');
+        if (f && f.value.trim()) calculate();
       });
+    });
   }
 
   function calculate() {
