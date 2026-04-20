@@ -619,6 +619,10 @@ const PhCalculator = (() => {
       <canvas id="ph-tit-canvas" width="580" height="340"
         style="width:100%;border:1px solid #dde3f0;border-radius:6px;background:#fff;"></canvas>
 
+      <div style="text-align:right;margin-top:6px;">
+        <button class="stoi-export-btn" onclick="PhCalculator.exportCurve()">⬇ Export Curve as PNG</button>
+      </div>
+
       <div style="margin-top:14px;">
         ${isWeak ? `
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px;margin-bottom:12px;">
@@ -839,13 +843,22 @@ const PhCalculator = (() => {
     }
   }
 
+  function exportCurve() {
+    const canvas = document.getElementById('ph-tit-canvas');
+    if (!canvas) { showAlert('No titration curve to export. Run a titration calculation first.', true); return; }
+    const link = document.createElement('a');
+    link.download = 'titration-curve.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+
   function clearAll() {
     document.getElementById('ph-results').innerHTML =
       `<div class="placeholder-msg">🧪 Fill in the fields and click <strong>Calculate</strong>.</div>`;
     buildInputs();
   }
 
-  return { init, setMode, calculate, clearAll };
+  return { init, setMode, calculate, clearAll, exportCurve };
 })();
 
 window.addEventListener('load', () => PhCalculator.init());
