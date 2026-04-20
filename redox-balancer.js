@@ -125,7 +125,7 @@ const RedoxBalancer = (() => {
         <td class="mono">${ionDisp(c.reactantFormula,0)}</td>
         <td class="num">${rON}</td>
         <td class="num">${pON}</td>
-        <td>${delta > 0 ? '↑ Increased' : '↓ Decreased'} (${delta > 0 ? '+' : ''}${formatON(delta, !Number.isInteger(delta))})</td>
+        <td>${delta > 0 ? '↑ Increased' : '↓ Decreased'} (${formatON(delta, !Number.isInteger(delta))})</td>
       </tr>`;
     }
     html += '</tbody></table>';
@@ -240,8 +240,6 @@ const RedoxBalancer = (() => {
     const reL = redMul > 1 ? `${redMul}(${redHR.finalLeft})`  : redHR.finalLeft;
     const reR = redMul > 1 ? `${redMul}(${redHR.finalRight})` : redHR.finalRight;
 
-    const finalEq = computeFinalEquation(sol);
-
     let html = `
       <div class="rx-substep">
         <div class="rx-substep-label ox-color">Oxidation (×${oxMul})</div>
@@ -252,6 +250,9 @@ const RedoxBalancer = (() => {
         <div class="rx-eq">${reL} → ${reR}</div>
       </div>
       <div class="rx-note" style="margin:10px 0 6px;">Add the two equations and cancel the <strong>${lcmE}e⁻</strong> from both sides:</div>`;
+
+    let finalEq = null;
+    try { finalEq = computeFinalEquation(sol); } catch(e) { console.error('computeFinalEquation error:', e); }
 
     if (finalEq) {
       html += `<div class="answer-box" style="flex-direction:column;gap:8px;">
