@@ -16,14 +16,8 @@ const EmpiricalMolecular = (() => {
   };
 
   function init() {
-    fetch('empirical-molecular.html')
-      .then(r => r.text())
-      .then(html => {
-        loadTemplate('empirical-molecular-container', html);
-        setMode('percent');
-        rebuildRows();
-      })
-      .catch(() => {});
+    setMode('percent');
+    rebuildRows();
   }
 
   function setMode(m) {
@@ -258,17 +252,14 @@ const EmpiricalMolecular = (() => {
     if (!ex) return;
     rows = ex.rows.map(r => ({...r}));
     setMode(ex.mode);
-    setTimeout(() => {
-      rebuildRows();
-      const mm = document.getElementById('em-molar-mass');
-      if (mm) mm.value = ex.molarMass !== null ? ex.molarMass : '';
-      // Sync values to DOM
-      const valInputs = document.querySelectorAll('.element-row input[type="number"]');
-      rows.forEach((r, i) => { if (valInputs[i]) valInputs[i].value = r.value; });
-      const elInputs = document.querySelectorAll('.element-row input[type="text"]');
-      rows.forEach((r, i) => { if (elInputs[i]) elInputs[i].value = r.element; });
-      calculate();
-    }, 30);
+    rebuildRows();
+    const mm = document.getElementById('em-molar-mass');
+    if (mm) mm.value = ex.molarMass !== null ? ex.molarMass : '';
+    const valInputs = document.querySelectorAll('.element-row input[type="number"]');
+    rows.forEach((r, i) => { if (valInputs[i]) valInputs[i].value = r.value; });
+    const elInputs = document.querySelectorAll('.element-row input[type="text"]');
+    rows.forEach((r, i) => { if (elInputs[i]) elInputs[i].value = r.element; });
+    calculate();
   }
 
   return { init, calculate, clear, setMode, addRow, loadExample };
