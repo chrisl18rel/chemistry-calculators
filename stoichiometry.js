@@ -96,7 +96,7 @@ const Stoichiometry = (() => {
     };
 
     // Display balanced equation
-    const coeff = (n) => n === 1 ? '' : `<span style="color:#e94560;font-weight:700;">${n}</span>`;
+    const coeff = (n) => n === 1 ? '' : `<span style="color:#e94560;font-weight:700;">${n}</span> `;
     const rStr = balanced.reactants.map(c => coeff(c.coeff) + formulaToHTML(c.formula)).join(' + ');
     const pStr = balanced.products.map(c  => coeff(c.coeff) + formulaToHTML(c.formula)).join(' + ');
     const eqEl = document.getElementById('stoi-balanced-eq');
@@ -174,7 +174,7 @@ const Stoichiometry = (() => {
         <td><input type="number" id="stoi-lim-amt-${i}" min="0" step="any"
               class="stoi-num-input" placeholder="0" style="width:100px;" /></td>
         <td>
-          <select id="stoi-lim-unit-${i}" class="stoi-select" style="width:80px;">
+          <select id="stoi-lim-unit-${i}" class="stoi-select" style="width:80px;background:#fff;color:#111;border-color:#c8d5ee;">
             <option value="mol">mol</option>
             <option value="g">g</option>
             <option value="kg">kg</option>
@@ -204,23 +204,25 @@ const Stoichiometry = (() => {
     const givenUnit= document.querySelector('input[name="stoi-unit"]:checked')?.value || 'mol';
     const dp       = parseInt(document.getElementById('stoi-sig-figs')?.value) || 4;
 
-    if (isNaN(givenAmt) || givenAmt < 0) { showAlert('Enter a valid amount.', true); return; }
+    if (isNaN(givenAmt)) { showAlert('Enter a valid amount.', true); return; }
+    if (isNaN(givenIdx)) { showAlert('Select a given compound.', true); return; }
 
     const given = balanced.allCompounds[givenIdx];
     if (!given) { showAlert('Select a given compound.', true); return; }
     if (!given.molarMass) { showAlert('Could not compute molar mass for ' + given.formula, true); return; }
 
-    const givenMoles = toMoles(givenAmt, givenUnit, given.molarMass);
-
-    // Calculate moles for all compounds
-    const results = balanced.allCompounds.map(c => {
-      const moles = givenMoles * (c.coeff / given.coeff);
-      const grams = moles * (c.molarMass || 0);
-      const kg    = grams / 1000;
-      return { ...c, moles, grams, kg, isGiven: c === given };
-    });
-
-    renderStandardResults(results, given, givenAmt, givenUnit, dp);
+    try {
+      const givenMoles = toMoles(givenAmt, givenUnit, given.molarMass);
+      const results = balanced.allCompounds.map(c => {
+        const moles = givenMoles * (c.coeff / given.coeff);
+        const grams = moles * (c.molarMass || 0);
+        const kg    = grams / 1000;
+        return { ...c, moles, grams, kg, isGiven: c === given };
+      });
+      renderStandardResults(results, given, givenAmt, givenUnit, dp);
+    } catch(e) {
+      showAlert('Calculation error: ' + e.message, true);
+    }
   }
 
   function renderStandardResults(results, given, givenAmt, givenUnit, dp) {
@@ -234,7 +236,7 @@ const Stoichiometry = (() => {
     let html = `<div class="stoi-results-title">Stoichiometry Calculation Results</div>`;
 
     // Balanced eq reminder
-    const coeff = (n) => n === 1 ? '' : `<span style="color:#e94560;font-weight:700;">${n}</span>`;
+    const coeff = (n) => n === 1 ? '' : `<span style="color:#e94560;font-weight:700;">${n}</span> `;
     const rStr = balanced.reactants.map(c => coeff(c.coeff) + formulaToHTML(c.formula)).join(' + ');
     const pStr = balanced.products.map(c  => coeff(c.coeff) + formulaToHTML(c.formula)).join(' + ');
     html += `<div class="stoi-balanced-eq" style="margin-bottom:16px;">${rStr} → ${pStr}</div>`;
@@ -326,7 +328,7 @@ const Stoichiometry = (() => {
     let html = `<div class="stoi-results-title">Limiting Reactant: <span class="stoi-limiting-name">${formulaToHTML(limiting.formula)}</span></div>`;
 
     // Balanced eq reminder
-    const coeff = (n) => n === 1 ? '' : `<span style="color:#e94560;font-weight:700;">${n}</span>`;
+    const coeff = (n) => n === 1 ? '' : `<span style="color:#e94560;font-weight:700;">${n}</span> `;
     const rStr = balanced.reactants.map(c => coeff(c.coeff) + formulaToHTML(c.formula)).join(' + ');
     const pStr = balanced.products.map(c  => coeff(c.coeff) + formulaToHTML(c.formula)).join(' + ');
     html += `<div class="stoi-balanced-eq" style="margin-bottom:16px;">${rStr} → ${pStr}</div>`;
@@ -501,7 +503,151 @@ const Stoichiometry = (() => {
     });
   }
 
-  return { init, balanceStep, onModeToggle, calculateStandard, calculateLimiting, exportPNG, clear };
+  // ── PERCENT YIELD (integrated) ──
+  let pyMode = 'yield'; // 'yield' | 'actual' | 'theoretical'
+
+  function pySetMode(m) {
+    pyMode = m;
+    ['yield','actual','theoretical'].forEach(k => {
+      const btn = document.getElementById(`py-mode-${k}`);
+      if (btn) btn.classList.toggle('active', k === m);
+    });
+    pyBuildFields();
+  }
+
+  function pyBuildFields() {
+    const container = document.getElementById('py-fields-stoi');
+    if (!container) return;
+
+    const labels = { actual:'Actual Yield', theoretical:'Theoretical Yield', pct:'% Yield' };
+    const units  = { actual:'', theoretical:'', pct:'%' };
+    const show   = { yield:['actual','theoretical'], actual:['theoretical','pct'], theoretical:['actual','pct'] };
+
+    let html = '';
+    show[pyMode].forEach(key => {
+      html += `<div class="stoi-input-grid" style="margin-bottom:8px;">
+        <div class="stoi-input-cell">
+          <label class="stoi-lbl">${labels[key]}</label>
+          <input type="number" id="py-stoi-${key}" min="0" step="any" placeholder="0" class="stoi-num-input" style="width:120px;" />
+        </div>`;
+      if (key !== 'pct') {
+        html += `<div class="stoi-input-cell">
+          <label class="stoi-lbl">Unit</label>
+          <div class="stoi-radio-row">
+            <label class="stoi-radio"><input type="radio" name="py-stoi-unit-${key}" value="g" checked /> g</label>
+            <label class="stoi-radio"><input type="radio" name="py-stoi-unit-${key}" value="kg" /> kg</label>
+            <label class="stoi-radio"><input type="radio" name="py-stoi-unit-${key}" value="mol" /> mol</label>
+          </div>
+        </div>`;
+      }
+      html += `</div>`;
+    });
+    html += `<div class="mini-note" style="margin-top:4px;color:#1a56a8;">Solving for: <strong>${
+      pyMode === 'yield' ? '% Yield' : pyMode === 'actual' ? 'Actual Yield' : 'Theoretical Yield'
+    }</strong></div>`;
+    container.innerHTML = html;
+  }
+
+  function pyGetVal(key) {
+    const el = document.getElementById(`py-stoi-${key}`);
+    const val = parseFloat(el?.value);
+    if (isNaN(val)) return null;
+    // Convert to grams for uniform calculation
+    if (key === 'pct') return val;
+    const unit = document.querySelector(`input[name="py-stoi-unit-${key}"]:checked`)?.value || 'g';
+    if (unit === 'kg') return { val: val * 1000, unit };
+    if (unit === 'mol') return { val, unit }; // moles — caller handles
+    return { val, unit: 'g' };
+  }
+
+  function pyCalculate() {
+    const resEl = document.getElementById('py-results-stoi');
+    if (!resEl) return;
+
+    // Read values
+    const getAmt = (key) => {
+      const el = document.getElementById(`py-stoi-${key}`);
+      const v = parseFloat(el?.value);
+      if (isNaN(v)) return null;
+      const unit = document.querySelector(`input[name="py-stoi-unit-${key}"]:checked`)?.value || 'g';
+      return { v, unit };
+    };
+
+    let actual, theoretical, pct, solvedFor;
+
+    if (pyMode === 'yield') {
+      const a = getAmt('actual'), t = getAmt('theoretical');
+      if (!a || !t) { showAlert('Enter both actual and theoretical yield.', true); return; }
+      // Convert to same unit for comparison — use as-is since we just need ratio
+      const aVal = a.unit === 'kg' ? a.v * 1000 : a.v;
+      const tVal = t.unit === 'kg' ? t.v * 1000 : t.v;
+      if (tVal <= 0) { showAlert('Theoretical yield must be > 0.', true); return; }
+      pct = (aVal / tVal) * 100;
+      actual = { v: a.v, unit: a.unit }; theoretical = { v: t.v, unit: t.unit };
+      solvedFor = '% Yield';
+    } else if (pyMode === 'actual') {
+      const t = getAmt('theoretical');
+      const pctEl = document.getElementById('py-stoi-pct');
+      const pctV = parseFloat(pctEl?.value);
+      if (!t || isNaN(pctV)) { showAlert('Enter theoretical yield and % yield.', true); return; }
+      if (pctV <= 0 || pctV > 100) { showAlert('% Yield must be between 0 and 100.', true); return; }
+      pct = pctV;
+      const tVal = t.unit === 'kg' ? t.v * 1000 : t.v;
+      const aGrams = (pct / 100) * tVal;
+      actual = { v: t.unit === 'kg' ? aGrams / 1000 : aGrams, unit: t.unit };
+      theoretical = t; solvedFor = 'Actual Yield';
+    } else {
+      const a = getAmt('actual');
+      const pctEl = document.getElementById('py-stoi-pct');
+      const pctV = parseFloat(pctEl?.value);
+      if (!a || isNaN(pctV)) { showAlert('Enter actual yield and % yield.', true); return; }
+      if (pctV <= 0) { showAlert('% Yield must be > 0.', true); return; }
+      pct = pctV;
+      const aVal = a.unit === 'kg' ? a.v * 1000 : a.v;
+      const tGrams = (aVal / pct) * 100;
+      theoretical = { v: a.unit === 'kg' ? tGrams / 1000 : tGrams, unit: a.unit };
+      actual = a; solvedFor = 'Theoretical Yield';
+    }
+
+    const fmtAmt = (obj) => `${obj.v.toFixed(4)} ${obj.unit}`;
+    const yieldClass = pct >= 90 ? 'green' : pct >= 75 ? 'blue' : pct >= 50 ? 'yellow' : 'red';
+    const yieldLabel = pct >= 90 ? 'Excellent' : pct >= 75 ? 'Good' : pct >= 50 ? 'Moderate' : 'Low';
+    const barPct = Math.min(pct, 100);
+    const barColor = pct >= 90 ? '#4caf50' : pct >= 75 ? '#4a90e2' : pct >= 50 ? '#ffc107' : '#ef5350';
+
+    resEl.innerHTML = `
+      <div class="stoi-section" style="background:#fff;border:1px solid #dde3f0;">
+        <div style="font-size:13px;font-weight:700;color:#1a2a4a;margin-bottom:10px;">% Yield Results</div>
+        <table class="result-table" style="margin-bottom:12px;">
+          <thead><tr><th>Quantity</th><th>Value</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Theoretical Yield</td><td class="num">${fmtAmt(theoretical)}</td>
+              <td>${solvedFor === 'Theoretical Yield' ? '<span class="result-badge blue">Solved</span>' : '<span class="result-badge green">Given</span>'}</td></tr>
+            <tr><td>Actual Yield</td><td class="num">${fmtAmt(actual)}</td>
+              <td>${solvedFor === 'Actual Yield' ? '<span class="result-badge blue">Solved</span>' : '<span class="result-badge green">Given</span>'}</td></tr>
+          </tbody>
+        </table>
+        <div class="answer-box" style="margin-bottom:12px;">
+          <span class="answer-label">% Yield</span>
+          <span class="answer-value">${pct.toFixed(2)}</span>
+          <span class="answer-unit">%</span>
+          <span class="result-badge ${yieldClass}" style="margin-left:8px;">${yieldLabel}</span>
+        </div>
+        <div style="height:14px;background:#e0e8f5;border-radius:7px;overflow:hidden;">
+          <div style="width:${barPct.toFixed(1)}%;height:100%;background:${barColor};border-radius:7px;"></div>
+        </div>
+        <div style="font-size:10px;color:#888;margin-top:3px;display:flex;justify-content:space-between;">
+          <span>0%</span><span>50%</span><span>100%</span>
+        </div>
+      </div>`;
+  }
+
+  return { init, balanceStep, onModeToggle, calculateStandard, calculateLimiting, exportPNG, clear,
+           pySetMode, pyCalculate };
 })();
 
-window.addEventListener('load', () => Stoichiometry.init());
+window.addEventListener('load', () => {
+  Stoichiometry.init();
+  // Initialize percent yield fields
+  setTimeout(() => { if (typeof Stoichiometry.pySetMode === 'function') Stoichiometry.pySetMode('yield'); }, 100);
+});
