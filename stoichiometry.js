@@ -96,8 +96,9 @@ const Stoichiometry = (() => {
     };
 
     // Display balanced equation
-    const rStr = balanced.reactants.map(c => (c.coeff > 1 ? c.coeff : '') + formulaToHTML(c.formula)).join(' + ');
-    const pStr = balanced.products.map(c  => (c.coeff > 1 ? c.coeff : '') + formulaToHTML(c.formula)).join(' + ');
+    const coeff = (n) => n === 1 ? '' : `<span style="color:#e94560;font-weight:700;">${n}</span>`;
+    const rStr = balanced.reactants.map(c => coeff(c.coeff) + formulaToHTML(c.formula)).join(' + ');
+    const pStr = balanced.products.map(c  => coeff(c.coeff) + formulaToHTML(c.formula)).join(' + ');
     const eqEl = document.getElementById('stoi-balanced-eq');
     if (eqEl) eqEl.innerHTML = rStr + ' → ' + pStr;
 
@@ -233,8 +234,9 @@ const Stoichiometry = (() => {
     let html = `<div class="stoi-results-title">Stoichiometry Calculation Results</div>`;
 
     // Balanced eq reminder
-    const rStr = balanced.reactants.map(c => (c.coeff>1?c.coeff:'') + formulaToHTML(c.formula)).join(' + ');
-    const pStr = balanced.products.map(c  => (c.coeff>1?c.coeff:'') + formulaToHTML(c.formula)).join(' + ');
+    const coeff = (n) => n === 1 ? '' : `<span style="color:#e94560;font-weight:700;">${n}</span>`;
+    const rStr = balanced.reactants.map(c => coeff(c.coeff) + formulaToHTML(c.formula)).join(' + ');
+    const pStr = balanced.products.map(c  => coeff(c.coeff) + formulaToHTML(c.formula)).join(' + ');
     html += `<div class="stoi-balanced-eq" style="margin-bottom:16px;">${rStr} → ${pStr}</div>`;
 
     // Results table
@@ -324,8 +326,9 @@ const Stoichiometry = (() => {
     let html = `<div class="stoi-results-title">Limiting Reactant: <span class="stoi-limiting-name">${formulaToHTML(limiting.formula)}</span></div>`;
 
     // Balanced eq reminder
-    const rStr = balanced.reactants.map(c => (c.coeff>1?c.coeff:'') + formulaToHTML(c.formula)).join(' + ');
-    const pStr = balanced.products.map(c  => (c.coeff>1?c.coeff:'') + formulaToHTML(c.formula)).join(' + ');
+    const coeff = (n) => n === 1 ? '' : `<span style="color:#e94560;font-weight:700;">${n}</span>`;
+    const rStr = balanced.reactants.map(c => coeff(c.coeff) + formulaToHTML(c.formula)).join(' + ');
+    const pStr = balanced.products.map(c  => coeff(c.coeff) + formulaToHTML(c.formula)).join(' + ');
     html += `<div class="stoi-balanced-eq" style="margin-bottom:16px;">${rStr} → ${pStr}</div>`;
 
     // Reactants table
