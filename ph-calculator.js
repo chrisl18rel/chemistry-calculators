@@ -3,17 +3,82 @@
 const PhCalculator = (() => {
 
   const Kw = 1.0e-14;
-  let currentMode = 'strong-acid';
+  let currentMode = 'smart';
   let chartInstance = null;
+
+  // ── COMPOUND DATABASE ──
+  // Each entry: formula, name, type, n (ion multiplier), Ka or Kb
+  const COMPOUND_DB = [
+    // Strong acids
+    { f:'HCl',     name:'Hydrochloric acid',     type:'strong-acid', n:1 },
+    { f:'HBr',     name:'Hydrobromic acid',       type:'strong-acid', n:1 },
+    { f:'HI',      name:'Hydroiodic acid',        type:'strong-acid', n:1 },
+    { f:'HNO3',    name:'Nitric acid',            type:'strong-acid', n:1 },
+    { f:'HClO4',   name:'Perchloric acid',        type:'strong-acid', n:1 },
+    { f:'HClO3',   name:'Chloric acid',           type:'strong-acid', n:1 },
+    { f:'H2SO4',   name:'Sulfuric acid',          type:'strong-acid', n:2 },
+    // Strong bases
+    { f:'NaOH',    name:'Sodium hydroxide',       type:'strong-base', n:1 },
+    { f:'KOH',     name:'Potassium hydroxide',    type:'strong-base', n:1 },
+    { f:'LiOH',    name:'Lithium hydroxide',      type:'strong-base', n:1 },
+    { f:'RbOH',    name:'Rubidium hydroxide',     type:'strong-base', n:1 },
+    { f:'CsOH',    name:'Cesium hydroxide',       type:'strong-base', n:1 },
+    { f:'Ca(OH)2', name:'Calcium hydroxide',      type:'strong-base', n:2 },
+    { f:'Ba(OH)2', name:'Barium hydroxide',       type:'strong-base', n:2 },
+    { f:'Sr(OH)2', name:'Strontium hydroxide',    type:'strong-base', n:2 },
+    { f:'Mg(OH)2', name:'Magnesium hydroxide',    type:'strong-base', n:2 },
+    // Weak acids (Ka values)
+    { f:'CH3COOH', name:'Acetic acid',            type:'weak-acid', n:1, Ka:1.8e-5 },
+    { f:'HC2H3O2', name:'Acetic acid',            type:'weak-acid', n:1, Ka:1.8e-5 },
+    { f:'HF',      name:'Hydrofluoric acid',      type:'weak-acid', n:1, Ka:6.8e-4 },
+    { f:'HCN',     name:'Hydrocyanic acid',       type:'weak-acid', n:1, Ka:6.2e-10 },
+    { f:'HNO2',    name:'Nitrous acid',           type:'weak-acid', n:1, Ka:4.5e-4 },
+    { f:'H2CO3',   name:'Carbonic acid',          type:'weak-acid', n:1, Ka:4.3e-7 },
+    { f:'H3PO4',   name:'Phosphoric acid',        type:'weak-acid', n:1, Ka:7.5e-3 },
+    { f:'HClO',    name:'Hypochlorous acid',      type:'weak-acid', n:1, Ka:3.5e-8 },
+    { f:'HClO2',   name:'Chlorous acid',          type:'weak-acid', n:1, Ka:1.1e-2 },
+    { f:'H2S',     name:'Hydrogen sulfide',       type:'weak-acid', n:1, Ka:9.5e-8 },
+    { f:'HCOOH',   name:'Formic acid',            type:'weak-acid', n:1, Ka:1.8e-4 },
+    { f:'C6H5COOH',name:'Benzoic acid',           type:'weak-acid', n:1, Ka:6.5e-5 },
+    { f:'C6H5OH',  name:'Phenol',                 type:'weak-acid', n:1, Ka:1.0e-10 },
+    { f:'H3BO3',   name:'Boric acid',             type:'weak-acid', n:1, Ka:5.8e-10 },
+    { f:'H2C2O4',  name:'Oxalic acid',            type:'weak-acid', n:1, Ka:5.9e-2 },
+    { f:'HCO3-',   name:'Bicarbonate ion',        type:'weak-acid', n:1, Ka:4.7e-11 },
+    // Weak bases (Kb values)
+    { f:'NH3',     name:'Ammonia',                type:'weak-base', n:1, Kb:1.8e-5 },
+    { f:'NH4OH',   name:'Ammonium hydroxide',     type:'weak-base', n:1, Kb:1.8e-5 },
+    { f:'C5H5N',   name:'Pyridine',               type:'weak-base', n:1, Kb:1.7e-9 },
+    { f:'C6H5NH2', name:'Aniline',                type:'weak-base', n:1, Kb:4.3e-10 },
+    { f:'CH3NH2',  name:'Methylamine',            type:'weak-base', n:1, Kb:4.4e-4 },
+    { f:'(CH3)2NH',name:'Dimethylamine',          type:'weak-base', n:1, Kb:5.9e-4 },
+    { f:'(CH3)3N', name:'Trimethylamine',         type:'weak-base', n:1, Kb:6.5e-5 },
+    { f:'C2H5NH2', name:'Ethylamine',             type:'weak-base', n:1, Kb:5.6e-4 },
+    { f:'N2H4',    name:'Hydrazine',              type:'weak-base', n:1, Kb:9.8e-7 },
+    { f:'C6H5CH2NH2',name:'Benzylamine',          type:'weak-base', n:1, Kb:2.2e-5 },
+    { f:'HCO3-',   name:'Bicarbonate (base)',     type:'weak-base', n:1, Kb:2.3e-8 },
+    { f:'CO3{2-}', name:'Carbonate ion',          type:'weak-base', n:1, Kb:2.1e-4 },
+    { f:'F-',      name:'Fluoride ion',           type:'weak-base', n:1, Kb:1.5e-11 },
+    { f:'CN-',     name:'Cyanide ion',            type:'weak-base', n:1, Kb:1.6e-5 },
+    { f:'CH3COO-', name:'Acetate ion',            type:'weak-base', n:1, Kb:5.6e-10 },
+    { f:'NO2-',    name:'Nitrite ion',            type:'weak-base', n:1, Kb:2.2e-11 },
+  ];
+
+  function detectCompound(raw) {
+    const s = raw.trim().replace(/\s+/g, '');
+    // Try exact match first (case-sensitive)
+    let match = COMPOUND_DB.find(c => c.f === s);
+    if (!match) match = COMPOUND_DB.find(c => c.f.toLowerCase() === s.toLowerCase());
+    return match || null;
+  }
 
   // ── INIT ──
   function init() {
-    setMode('strong-acid');
+    setMode('smart');
   }
 
   function setMode(mode) {
     currentMode = mode;
-    ['strong-acid','strong-base','weak-acid','weak-base','buffer','titration'].forEach(m => {
+    ['smart','strong-acid','strong-base','weak-acid','weak-base','buffer','titration'].forEach(m => {
       const btn = document.getElementById(`ph-mode-${m}`);
       if (btn) btn.classList.toggle('active', m === mode);
     });
@@ -27,6 +92,7 @@ const PhCalculator = (() => {
     const c = document.getElementById('ph-input-fields');
     if (!c) return;
     const templates = {
+      'smart':       smartInputs,
       'strong-acid': strongAcidInputs,
       'strong-base': strongBaseInputs,
       'weak-acid':   weakAcidInputs,
@@ -35,6 +101,71 @@ const PhCalculator = (() => {
       'titration':   titrationInputs,
     };
     c.innerHTML = (templates[currentMode] || (() => ''))();
+  }
+
+  function smartInputs() {
+    return `
+      <div style="margin-bottom:10px;">
+        <label class="stoi-lbl">Chemical Formula</label>
+        <input type="text" id="ph-smart-formula" placeholder="e.g. HCl, NH3, Ca(OH)2"
+          class="formula-input" style="width:100%;box-sizing:border-box;"
+          oninput="PhCalculator.smartDetect()" autocomplete="off" spellcheck="false" />
+        <div id="ph-smart-detect-result" style="margin-top:5px;min-height:20px;"></div>
+      </div>
+
+      <div class="display-divider"></div>
+
+      <div style="margin-bottom:10px;">
+        <label class="stoi-lbl">What do you know? (select one)</label>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-top:4px;">
+          <label class="stoi-radio" style="font-size:12px;">
+            <input type="radio" name="ph-smart-known" value="conc" checked onchange="PhCalculator.smartUpdateFields()" />
+            Molar concentration (mol/L)
+          </label>
+          <label class="stoi-radio" style="font-size:12px;">
+            <input type="radio" name="ph-smart-known" value="pH" onchange="PhCalculator.smartUpdateFields()" />
+            pH
+          </label>
+          <label class="stoi-radio" style="font-size:12px;">
+            <input type="radio" name="ph-smart-known" value="pOH" onchange="PhCalculator.smartUpdateFields()" />
+            pOH
+          </label>
+          <label class="stoi-radio" style="font-size:12px;">
+            <input type="radio" name="ph-smart-known" value="h3o" onchange="PhCalculator.smartUpdateFields()" />
+            [H₃O⁺] concentration
+          </label>
+          <label class="stoi-radio" style="font-size:12px;">
+            <input type="radio" name="ph-smart-known" value="oh" onchange="PhCalculator.smartUpdateFields()" />
+            [OH⁻] concentration
+          </label>
+        </div>
+      </div>
+
+      <div id="ph-smart-value-fields">
+        <div style="margin-bottom:10px;">
+          <label class="stoi-lbl">Concentration (mol/L)</label>
+          <input type="number" id="ph-smart-val" min="0" step="any" placeholder="e.g. 0.100"
+            class="stoi-num-input" style="width:100%;box-sizing:border-box;" />
+        </div>
+      </div>
+
+      <div id="ph-smart-k-field" style="display:none;">
+        <div class="display-divider"></div>
+        <div style="margin-bottom:6px;">
+          <label class="stoi-lbl">Equilibrium Constant</label>
+          <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <label class="stoi-radio" style="font-size:12px;">
+              <input type="radio" name="ph-smart-ktype" value="Ka" checked /> Ka
+            </label>
+            <label class="stoi-radio" style="font-size:12px;">
+              <input type="radio" name="ph-smart-ktype" value="Kb" /> Kb
+            </label>
+          </div>
+          <input type="number" id="ph-smart-kval" min="0" step="any" placeholder="e.g. 1.8e-5"
+            class="stoi-num-input" style="width:100%;box-sizing:border-box;" />
+          <div class="mini-note" id="ph-smart-k-note">Enter Ka or Kb (e.g. 1.8e-5)</div>
+        </div>
+      </div>`;
   }
 
   function numField(id, label, placeholder, note='') {
@@ -122,10 +253,105 @@ const PhCalculator = (() => {
       ${numField('ph-tit-t-maxvol', 'Max Titrant Volume to Plot (mL)', '60', 'Default: 60 mL')}`;
   }
 
+  // ── SMART MODE LIVE DETECTION ──
+  function smartDetect() {
+    const raw = document.getElementById('ph-smart-formula')?.value || '';
+    const resultEl = document.getElementById('ph-smart-detect-result');
+    if (!resultEl) return;
+    if (!raw.trim()) { resultEl.innerHTML = ''; return; }
+
+    const compound = detectCompound(raw);
+    if (!compound) {
+      resultEl.innerHTML = `<div class="mini-note" style="color:#e94560;">
+        ⚠ Compound not recognized. You can still calculate using the manual modes.</div>`;
+      smartUpdateKField(null);
+      return;
+    }
+
+    const typeLabels = {
+      'strong-acid': '⚡ Strong Acid',
+      'strong-base': '⚡ Strong Base',
+      'weak-acid':   '〰 Weak Acid',
+      'weak-base':   '〰 Weak Base',
+    };
+    const typeColors = {
+      'strong-acid':'#e94560','strong-base':'#1a56a8',
+      'weak-acid':'#d35400','weak-base':'#2e7d32'
+    };
+    const color = typeColors[compound.type] || '#555';
+    const kInfo = compound.Ka
+      ? `Ka = ${compound.Ka.toExponential(2)}`
+      : compound.Kb
+        ? `Kb = ${compound.Kb.toExponential(2)}`
+        : '';
+    const nInfo = compound.n > 1
+      ? `· releases <strong>${compound.n} ions</strong> per formula unit`
+      : '';
+
+    resultEl.innerHTML = `<div style="background:${color}18;border:1px solid ${color}44;
+      border-radius:5px;padding:7px 10px;font-size:12px;line-height:1.6;">
+      <strong style="color:${color};">${typeLabels[compound.type]}</strong>
+      &nbsp;—&nbsp;${compound.name}
+      ${nInfo ? `<br>${nInfo}` : ''}
+      ${kInfo ? `<br><span style="color:#555;">${kInfo} (built-in)</span>` : ''}
+    </div>`;
+
+    smartUpdateKField(compound);
+  }
+
+  function smartUpdateKField(compound) {
+    const kField = document.getElementById('ph-smart-k-field');
+    if (!kField) return;
+    const isWeak = compound && (compound.type === 'weak-acid' || compound.type === 'weak-base');
+    kField.style.display = isWeak ? '' : 'none';
+
+    if (isWeak && compound) {
+      const noteEl = document.getElementById('ph-smart-k-note');
+      if (compound.Ka) {
+        if (noteEl) noteEl.textContent = `Built-in Ka = ${compound.Ka.toExponential(3)} — leave blank to use, or override`;
+        const kInput = document.getElementById('ph-smart-kval');
+        if (kInput && !kInput.value) kInput.placeholder = `${compound.Ka.toExponential(3)} (built-in)`;
+        // Pre-select Ka radio
+        const kaRadio = document.querySelector('input[name="ph-smart-ktype"][value="Ka"]');
+        if (kaRadio) kaRadio.checked = true;
+      } else if (compound.Kb) {
+        if (noteEl) noteEl.textContent = `Built-in Kb = ${compound.Kb.toExponential(3)} — leave blank to use, or override`;
+        const kInput = document.getElementById('ph-smart-kval');
+        if (kInput && !kInput.value) kInput.placeholder = `${compound.Kb.toExponential(3)} (built-in)`;
+        const kbRadio = document.querySelector('input[name="ph-smart-ktype"][value="Kb"]');
+        if (kbRadio) kbRadio.checked = true;
+      }
+    }
+  }
+
+  function smartUpdateFields() {
+    const known = document.querySelector('input[name="ph-smart-known"]:checked')?.value || 'conc';
+    const labels = {
+      conc: ['Concentration (mol/L)', 'e.g. 0.100'],
+      pH:   ['pH', 'e.g. 3.45'],
+      pOH:  ['pOH', 'e.g. 10.55'],
+      h3o:  ['[H₃O⁺] (mol/L)', 'e.g. 3.55e-4'],
+      oh:   ['[OH⁻] (mol/L)', 'e.g. 2.5e-11'],
+    };
+    const [lbl, ph] = labels[known] || labels.conc;
+    const fieldsEl = document.getElementById('ph-smart-value-fields');
+    if (fieldsEl) {
+      fieldsEl.innerHTML = `<div style="margin-bottom:10px;">
+        <label class="stoi-lbl">${lbl}</label>
+        <input type="number" id="ph-smart-val" min="0" step="any" placeholder="${ph}"
+          class="stoi-num-input" style="width:100%;box-sizing:border-box;" />
+      </div>`;
+    }
+    // If not concentration, weak acid/base K field may still be needed — re-run detect
+    const raw = document.getElementById('ph-smart-formula')?.value || '';
+    if (raw.trim()) smartDetect();
+  }
+
   // ── CALCULATE DISPATCHER ──
   function calculate() {
     try {
       switch (currentMode) {
+        case 'smart':        calcSmart();       break;
         case 'strong-acid':  calcStrongAcid();  break;
         case 'strong-base':  calcStrongBase();  break;
         case 'weak-acid':    calcWeakAcid();    break;
@@ -137,6 +363,202 @@ const PhCalculator = (() => {
       document.getElementById('ph-results').innerHTML =
         `<div class="placeholder-msg" style="color:#e74c3c;">⚠ ${e.message}</div>`;
     }
+  }
+
+  // ── SMART CALCULATION ──
+  function calcSmart() {
+    const raw = document.getElementById('ph-smart-formula')?.value?.trim();
+    if (!raw) throw new Error('Enter a chemical formula.');
+
+    const compound = detectCompound(raw);
+    const known = document.querySelector('input[name="ph-smart-known"]:checked')?.value || 'conc';
+    const valRaw = parseFloat(document.getElementById('ph-smart-val')?.value);
+    if (isNaN(valRaw)) throw new Error('Enter a value for the known quantity.');
+
+    // Resolve compound type — if unrecognized, we can still solve from pH/pOH/[H3O+]/[OH-]
+    const cType  = compound?.type || null;
+    const n      = compound?.n || 1;
+    const cName  = compound ? `${compound.name} (${compound.f})` : raw;
+
+    // ── Convert known value to [H3O+] and [OH-] ──
+    let pH, pOH, h3o, oh;
+    let concentrationProvided = false;
+    let C = null;
+
+    if (known === 'pH') {
+      pH  = valRaw;
+      pOH = 14 - pH;
+      h3o = Math.pow(10, -pH);
+      oh  = Math.pow(10, -pOH);
+    } else if (known === 'pOH') {
+      pOH = valRaw;
+      pH  = 14 - pOH;
+      h3o = Math.pow(10, -pH);
+      oh  = Math.pow(10, -pOH);
+    } else if (known === 'h3o') {
+      if (valRaw <= 0) throw new Error('[H₃O⁺] must be positive.');
+      h3o = valRaw;
+      pH  = -Math.log10(h3o);
+      pOH = 14 - pH;
+      oh  = Math.pow(10, -pOH);
+    } else if (known === 'oh') {
+      if (valRaw <= 0) throw new Error('[OH⁻] must be positive.');
+      oh  = valRaw;
+      pOH = -Math.log10(oh);
+      pH  = 14 - pOH;
+      h3o = Math.pow(10, -pH);
+    } else {
+      // Concentration — need compound type to proceed
+      if (!compound) throw new Error('Compound not recognized. Enter pH, pOH, [H₃O⁺], or [OH⁻] directly, or use a manual mode.');
+      concentrationProvided = true;
+      C = valRaw;
+      if (C <= 0) throw new Error('Concentration must be positive.');
+    }
+
+    // Resolve Ka/Kb for weak species
+    let Ka = null, Kb = null;
+    if (cType === 'weak-acid' || cType === 'weak-base') {
+      const kvalInput = parseFloat(document.getElementById('ph-smart-kval')?.value);
+      const ktype     = document.querySelector('input[name="ph-smart-ktype"]:checked')?.value || 'Ka';
+
+      if (!isNaN(kvalInput) && kvalInput > 0) {
+        // User override
+        if (cType === 'weak-acid') {
+          Ka = ktype === 'Ka' ? kvalInput : Kw / kvalInput;
+        } else {
+          Kb = ktype === 'Kb' ? kvalInput : Kw / kvalInput;
+        }
+      } else if (compound?.Ka) {
+        Ka = compound.Ka;
+      } else if (compound?.Kb) {
+        Kb = compound.Kb;
+      } else if (concentrationProvided) {
+        throw new Error('Ka or Kb is required for weak acid/base calculations from concentration.');
+      }
+      if (Ka) Kb = Kw / Ka;
+      if (Kb && !Ka) Ka = Kw / Kb;
+    }
+
+    // ── Solve from concentration using proper chemistry ──
+    if (concentrationProvided) {
+      if (cType === 'strong-acid') {
+        h3o = C * n;
+        pH  = -Math.log10(h3o);
+        pOH = 14 - pH;
+        oh  = Math.pow(10, -pOH);
+      } else if (cType === 'strong-base') {
+        oh  = C * n;
+        pOH = -Math.log10(oh);
+        pH  = 14 - pOH;
+        h3o = Math.pow(10, -pH);
+      } else if (cType === 'weak-acid') {
+        const disc = Ka*Ka + 4*Ka*C;
+        const x = (-Ka + Math.sqrt(disc)) / 2;
+        h3o = x;
+        pH  = -Math.log10(h3o);
+        pOH = 14 - pH;
+        oh  = Math.pow(10, -pOH);
+      } else if (cType === 'weak-base') {
+        const disc = Kb*Kb + 4*Kb*C;
+        const x = (-Kb + Math.sqrt(disc)) / 2;
+        oh  = x;
+        pOH = -Math.log10(oh);
+        pH  = 14 - pOH;
+        h3o = Math.pow(10, -pH);
+      }
+    }
+
+    // ── Build step-by-step ──
+    const pKa = Ka ? -Math.log10(Ka) : null;
+    const pKb = Kb ? -Math.log10(Kb) : null;
+
+    let typeLabel = cType
+      ? { 'strong-acid':'Strong Acid','strong-base':'Strong Base','weak-acid':'Weak Acid','weak-base':'Weak Base' }[cType]
+      : 'Unknown type — solved from given value';
+
+    const steps = buildSmartSteps(cName, cType, n, known, valRaw, C, Ka, Kb, h3o, oh, pH, pOH);
+    const warnings = buildSmartWarnings(cType, compound, n, known);
+
+    const el = document.getElementById('ph-results');
+    el.innerHTML = `
+      <h2 style="margin-bottom:4px;font-size:18px;color:#1a2a4a;">🔍 Smart Mode Result</h2>
+      <div style="font-size:12px;color:#555;margin-bottom:12px;">
+        ${cName} &nbsp;·&nbsp; <span style="font-weight:700;color:${
+          {'strong-acid':'#e94560','strong-base':'#1a56a8','weak-acid':'#d35400','weak-base':'#2e7d32'}[cType]||'#555'
+        };">${typeLabel}</span>
+        ${n > 1 ? ` &nbsp;·&nbsp; ${n} ions/formula unit` : ''}
+      </div>
+      ${warnings}
+      ${makeResultsBox(pH, pOH, h3o, oh, Ka, Kb)}
+      <div class="results-section-title">Step-by-Step Solution</div>
+      <div style="background:#f8f9ff;border:1px solid #dde3f0;border-radius:6px;padding:14px;
+        line-height:1.8;font-size:13px;">${steps}</div>`;
+  }
+
+  function buildSmartWarnings(cType, compound, n, known) {
+    let w = '';
+    if (!compound) {
+      w += note('⚠ Compound not in database. Result is calculated directly from the given value — no chemistry model applied.', '#856404');
+    } else if (n > 1 && known === 'conc') {
+      w += note(`ℹ ${compound.name} releases <strong>${n} ions per formula unit</strong>. The ion concentration = ${n} × molar concentration.`, '#1a56a8');
+    }
+    return w;
+  }
+
+  function buildSmartSteps(cName, cType, n, known, valRaw, C, Ka, Kb, h3o, oh, pH, pOH) {
+    const pKa = Ka ? -Math.log10(Ka) : null;
+    const pKb = Kb ? -Math.log10(Kb) : null;
+    let steps = [];
+
+    steps.push(stepLine(1, `Identified: <strong>${cName}</strong> → <strong>${
+      {'strong-acid':'strong acid','strong-base':'strong base','weak-acid':'weak acid','weak-base':'weak base'}[cType]||'unknown'
+    }</strong>`));
+
+    if (known === 'conc') {
+      steps.push(stepLine(2, `Given: molar concentration C = ${valRaw} mol/L`));
+      if ((cType === 'strong-acid' || cType === 'strong-base') && n > 1) {
+        const ionName = cType === 'strong-acid' ? '[H₃O⁺]' : '[OH⁻]';
+        steps.push(stepLine(3, `${cType === 'strong-base' ? 'Strong base dissociates completely.' : 'Strong acid dissociates completely.'} Multiply by n = ${n}:`));
+        steps.push(eq(`${ionName} = C × n = ${valRaw} × ${n} = ${(valRaw*n).toExponential(4)} M`));
+      } else if (cType === 'strong-acid') {
+        steps.push(stepLine(3, 'Strong acid dissociates completely:'));
+        steps.push(eq(`[H₃O⁺] = C = ${valRaw} mol/L`));
+      } else if (cType === 'strong-base') {
+        steps.push(stepLine(3, 'Strong base dissociates completely:'));
+        steps.push(eq(`[OH⁻] = C = ${valRaw} mol/L`));
+      } else if (cType === 'weak-acid') {
+        steps.push(stepLine(3, `Weak acid — Ka = ${Ka.toExponential(4)}. Solve using ICE table quadratic:`));
+        steps.push(eq(`x = [−Ka + √(Ka² + 4·Ka·C)] / 2`));
+        steps.push(eq(`x = [H₃O⁺] = ${h3o.toExponential(4)} M`));
+      } else if (cType === 'weak-base') {
+        steps.push(stepLine(3, `Weak base — Kb = ${Kb.toExponential(4)}. Solve using ICE table quadratic:`));
+        steps.push(eq(`x = [−Kb + √(Kb² + 4·Kb·C)] / 2`));
+        steps.push(eq(`x = [OH⁻] = ${oh.toExponential(4)} M`));
+      }
+    } else if (known === 'pH') {
+      steps.push(stepLine(2, `Given: pH = ${valRaw}`));
+      steps.push(eq(`[H₃O⁺] = 10<sup>−${valRaw}</sup> = ${h3o.toExponential(4)} M`));
+    } else if (known === 'pOH') {
+      steps.push(stepLine(2, `Given: pOH = ${valRaw}`));
+      steps.push(eq(`[OH⁻] = 10<sup>−${valRaw}</sup> = ${oh.toExponential(4)} M`));
+    } else if (known === 'h3o') {
+      steps.push(stepLine(2, `Given: [H₃O⁺] = ${valRaw} M`));
+      steps.push(eq(`pH = −log(${valRaw}) = ${fmt2(pH)}`));
+    } else if (known === 'oh') {
+      steps.push(stepLine(2, `Given: [OH⁻] = ${valRaw} M`));
+      steps.push(eq(`pOH = −log(${valRaw}) = ${fmt2(pOH)}`));
+    }
+
+    const step4 = steps.length + 1;
+    steps.push(stepLine(step4, 'Calculate all remaining values:'));
+    steps.push(eq(`pH = ${fmt2(pH)}`));
+    steps.push(eq(`pOH = 14.00 − ${fmt2(pH)} = ${fmt2(pOH)}`));
+    steps.push(eq(`[H₃O⁺] = 10<sup>−${fmt2(pH)}</sup> = ${sci(h3o)} M`));
+    steps.push(eq(`[OH⁻] = 10<sup>−${fmt2(pOH)}</sup> = ${sci(oh)} M`));
+    if (pKa !== null) steps.push(eq(`pKa = −log(Ka) = ${fmt2(pKa)}`));
+    if (pKb !== null) steps.push(eq(`pKb = −log(Kb) = ${fmt2(pKb)}`));
+
+    return steps.join('');
   }
 
   // ── SHARED HELPERS ──
@@ -858,7 +1280,7 @@ const PhCalculator = (() => {
     buildInputs();
   }
 
-  return { init, setMode, calculate, clearAll, exportCurve };
+  return { init, setMode, calculate, clearAll, exportCurve, smartDetect, smartUpdateFields };
 })();
 
 window.addEventListener('load', () => PhCalculator.init());
