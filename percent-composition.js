@@ -48,7 +48,7 @@ const PercentComposition = (() => {
       html += `<tr>
         <td><strong>${row.element}</strong></td>
         <td class="num">${row.count}</td>
-        <td class="num">${row.atomicMass.toFixed(4)}</td>
+        <td class="num">${parseFloat(row.atomicMass.toFixed(5)).toString()}</td>
         <td class="num">${row.contribution.toFixed(4)}</td>
         <td>
           <div style="display:flex;align-items:center;gap:8px;">
