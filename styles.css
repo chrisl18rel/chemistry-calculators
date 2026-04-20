@@ -833,6 +833,7 @@ textarea { resize: vertical; min-height: 60px; }
   outline: none;
   min-width: 180px;
 }
+.stoi-select option { background: #fff !important; color: #111 !important; }
 .stoi-select:focus { border-color: #4a90e2; }
 .stoi-num-input {
   background: #fff;
