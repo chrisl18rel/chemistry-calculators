@@ -239,7 +239,10 @@ const RedoxBalancer = (() => {
     const oxR = oxMul > 1 ? `${oxMul}(${oxHR.finalRight})` : oxHR.finalRight;
     const reL = redMul > 1 ? `${redMul}(${redHR.finalLeft})`  : redHR.finalLeft;
     const reR = redMul > 1 ? `${redMul}(${redHR.finalRight})` : redHR.finalRight;
-    return `
+
+    const finalEq = computeFinalEquation(sol);
+
+    let html = `
       <div class="rx-substep">
         <div class="rx-substep-label ox-color">Oxidation (×${oxMul})</div>
         <div class="rx-eq">${oxL} → ${oxR}</div>
@@ -248,13 +251,78 @@ const RedoxBalancer = (() => {
         <div class="rx-substep-label red-color">Reduction (×${redMul})</div>
         <div class="rx-eq">${reL} → ${reR}</div>
       </div>
-      <div class="rx-note" style="margin:10px 0 6px;">Add the two equations. The <strong>${lcmE}e⁻</strong> cancel:</div>
-      <div class="answer-box" style="flex-direction:column;gap:6px;">
+      <div class="rx-note" style="margin:10px 0 6px;">Add the two equations and cancel the <strong>${lcmE}e⁻</strong> from both sides:</div>`;
+
+    if (finalEq) {
+      html += `<div class="answer-box" style="flex-direction:column;gap:8px;">
+        <span class="answer-label">✓ Balanced Net Ionic Equation</span>
+        <div class="rx-eq" style="margin:0;background:#f0f6ff;border-color:#c8d5ee;font-size:15px;font-weight:600;color:#1a2a4a;">
+          ${finalEq}
+        </div>
+      </div>`;
+    } else {
+      html += `<div class="answer-box" style="flex-direction:column;gap:6px;">
         <span class="answer-label">✓ Balanced Net Ionic Equation</span>
         <div style="font-size:12px;color:#555;margin-top:2px;">
           Combine, cancel the ${lcmE}e⁻, then simplify any H₂O, H⁺, or OH⁻ on both sides.
         </div>
       </div>`;
+    }
+    return html;
+  }
+
+  // Build the final balanced net ionic equation by combining scaled half-reactions
+  // using the structured species lists returned by buildHalfReaction.
+  function computeFinalEquation(sol) {
+    const { oxHR, redHR, oxMul, redMul } = sol;
+
+    // Accumulate species on each side: key → { formula, charge, count }
+    const leftMap  = {};
+    const rightMap = {};
+
+    function key(s) { return `${s.formula}__${s.charge}`; }
+
+    function add(map, species, multiplier) {
+      for (const s of species) {
+        const k = key(s);
+        const count = s.coeff * multiplier;
+        if (map[k]) map[k].count += count;
+        else map[k] = { formula: s.formula, charge: s.charge, count };
+      }
+    }
+
+    add(leftMap,  oxHR.finalLeftSpecies,   oxMul);
+    add(rightMap, oxHR.finalRightSpecies,  oxMul);
+    add(leftMap,  redHR.finalLeftSpecies,  redMul);
+    add(rightMap, redHR.finalRightSpecies, redMul);
+
+    // Cancel species appearing on both sides (electrons, H₂O, H⁺)
+    for (const k of Object.keys(leftMap)) {
+      if (rightMap[k]) {
+        const lC = leftMap[k].count, rC = rightMap[k].count;
+        if (lC === rC)      { delete leftMap[k]; delete rightMap[k]; }
+        else if (lC > rC)   { leftMap[k].count  = lC - rC; delete rightMap[k]; }
+        else                { rightMap[k].count = rC - lC; delete leftMap[k];  }
+      }
+    }
+
+    // Render a side to HTML
+    const sideHTML = (map) => {
+      const entries = Object.values(map).filter(e => e.count > 0);
+      if (!entries.length) return '0';
+      return entries.map(e => {
+        if (e.formula === 'e') return `${e.count > 1 ? e.count : ''}e⁻`;
+        const coeff   = e.count > 1 ? e.count : '';
+        const formula = e.formula === 'H2O' ? 'H₂O' : formulaToHTML(e.formula);
+        const charge  = e.charge ? formatChargeSup(e.charge) : '';
+        return `${coeff}${formula}${charge ? `<sup>${charge}</sup>` : ''}`;
+      }).join(' + ');
+    };
+
+    const leftStr  = sideHTML(leftMap);
+    const rightStr = sideHTML(rightMap);
+    if (!leftStr || !rightStr || leftStr === '0' || rightStr === '0') return null;
+    return `${leftStr} → ${rightStr}`;
   }
 
   function renderBasic() {
@@ -278,6 +346,13 @@ const RedoxBalancer = (() => {
     const abs = Math.abs(charge);
     const sign = charge > 0 ? '+' : '−';
     return `${s}<sup>${abs === 1 ? sign : abs + sign}</sup>`;
+  }
+
+  function formatChargeSup(n) {
+    if (n === 0) return '';
+    const abs = Math.abs(n);
+    const sign = n > 0 ? '+' : '−';
+    return abs === 1 ? sign : `${abs}${sign}`;
   }
 
   function formatON(n, isFrac) {
