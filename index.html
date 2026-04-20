@@ -17,7 +17,7 @@
       <p>Molar mass · Equation balancing · Stoichiometry · Composition · Yield · Empirical formula</p>
     </div>
   </div>
-  <div class="app-version">v3.5</div>
+  <div class="app-version">v3.6</div>
 </header>
 
 <nav class="tab-nav">
@@ -325,17 +325,46 @@
   </div>
 
   <!-- ── PERCENT YIELD ── -->
-  <div class="stoi-section" style="margin-top:4px;">
+  <div class="stoi-section" style="margin-top:4px;" id="py-stoi-section">
     <div class="stoi-section-title">📈 Percent Yield Calculator</div>
-    <div class="stoi-hint">Solve for any one of the three values — enter the other two.</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-      <button class="style-btn active" id="py-mode-yield"        onclick="Stoichiometry.pySetMode('yield')"       style="flex:1;min-width:120px;">Solve: % Yield</button>
-      <button class="style-btn"        id="py-mode-actual"       onclick="Stoichiometry.pySetMode('actual')"      style="flex:1;min-width:120px;">Solve: Actual Yield</button>
-      <button class="style-btn"        id="py-mode-theoretical"  onclick="Stoichiometry.pySetMode('theoretical')" style="flex:1;min-width:120px;">Solve: Theoretical Yield</button>
+
+    <!-- Shown after stoichiometry runs -->
+    <div id="py-from-stoi" style="display:none;">
+      <div class="stoi-hint" style="margin-bottom:10px;">
+        Theoretical yields from your stoichiometry calculation are shown below.
+        Enter the <strong>actual yield</strong> for each product to calculate % yield.
+      </div>
+      <div id="py-product-table"></div>
+      <button class="stoi-calc-btn" onclick="Stoichiometry.pyCalcFromStoi()" style="margin-top:10px;">📈 Calculate % Yield</button>
+      <div id="py-stoi-results" style="margin-top:12px;"></div>
+      <div style="margin-top:8px;">
+        <button class="stoi-export-btn" onclick="Stoichiometry.pySetManual()" style="font-size:11px;">
+          ✏️ Switch to manual entry instead
+        </button>
+      </div>
     </div>
-    <div id="py-fields-stoi"></div>
-    <button class="stoi-calc-btn" onclick="Stoichiometry.pyCalculate()" style="margin-top:8px;">📈 Calculate % Yield</button>
-    <div id="py-results-stoi" style="margin-top:12px;"></div>
+
+    <!-- Manual entry (default, or when no stoichiometry data) -->
+    <div id="py-manual" style="display:none;">
+      <div class="stoi-hint">Enter any two values to solve for the third.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <button class="style-btn active" id="py-mode-yield"       onclick="Stoichiometry.pySetMode('yield')"       style="flex:1;min-width:120px;">Solve: % Yield</button>
+        <button class="style-btn"        id="py-mode-actual"      onclick="Stoichiometry.pySetMode('actual')"      style="flex:1;min-width:120px;">Solve: Actual Yield</button>
+        <button class="style-btn"        id="py-mode-theoretical" onclick="Stoichiometry.pySetMode('theoretical')" style="flex:1;min-width:120px;">Solve: Theoretical Yield</button>
+      </div>
+      <div id="py-fields-stoi"></div>
+      <button class="stoi-calc-btn" onclick="Stoichiometry.pyCalculate()" style="margin-top:8px;">📈 Calculate % Yield</button>
+      <div id="py-results-stoi" style="margin-top:12px;"></div>
+    </div>
+
+    <!-- Placeholder before any calculation -->
+    <div id="py-placeholder">
+      <div class="stoi-hint" style="color:#888;">
+        Run a stoichiometry calculation above and the theoretical yields will appear here automatically —
+        or use manual entry below.
+      </div>
+      <button class="stoi-calc-btn" onclick="Stoichiometry.pySetManual()" style="margin-top:10px;background:#555;">✏️ Enter Yields Manually</button>
+    </div>
   </div>
 
 </div>
