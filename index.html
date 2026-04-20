@@ -17,7 +17,7 @@
       <p>Molar mass · Equation balancing · Stoichiometry · Composition · Yield · Empirical formula</p>
     </div>
   </div>
-  <div class="app-version">v3.3</div>
+  <div class="app-version">v3.4</div>
 </header>
 
 <nav class="tab-nav">
@@ -26,7 +26,6 @@
   <button class="tab-btn" data-tab="redox-balancer">🔋 Redox Balancer</button>
   <button class="tab-btn" data-tab="stoichiometry">🧮 Stoichiometry</button>
   <button class="tab-btn" data-tab="percent-composition">📊 % Composition</button>
-  <button class="tab-btn" data-tab="percent-yield">📈 % Yield</button>
   <button class="tab-btn" data-tab="empirical-molecular">🔬 Empirical / Molecular</button>
 </nav>
 
@@ -232,7 +231,15 @@
   <!-- ── EQUATION INPUT ── -->
   <div class="stoi-section">
     <div class="stoi-section-title">Step 1: Enter Chemical Equation</div>
-    <div class="stoi-hint">Paste or type a full equation. Blanks, state symbols, and existing coefficients are stripped automatically.</div>
+    <div class="stoi-hint">Paste or type a full equation. Blanks, state symbols, and existing coefficients are stripped automatically.<br>
+      <span style="color:#1a56a8;font-size:11px;">
+        Examples you can type:<br>
+        &nbsp;• <code>H2 + O2 → H2O</code><br>
+        &nbsp;• <code>___Al4C3 + ___H2O → ___CH4 + ___Al(OH)3</code><br>
+        &nbsp;• <code>Fe(s) + CuSO4(aq) → Fe2(SO4)3(aq) + Cu(s)</code><br>
+        &nbsp;• Use <code>→</code> or <code>-></code> for the arrow &nbsp;|&nbsp; Ctrl+Enter to balance
+      </span>
+    </div>
     <div class="stoi-eq-row">
       <textarea id="stoi-eq-input" class="stoi-eq-textarea formula-input"
         placeholder="e.g. H2 + O2 → H2O   or   ___Al4C3 + ___H2O → ___CH4 + ___Al(OH)3"
@@ -316,6 +323,20 @@
     </div>
   </div>
 
+  <!-- ── PERCENT YIELD ── -->
+  <div class="stoi-section" style="margin-top:4px;">
+    <div class="stoi-section-title">📈 Percent Yield Calculator</div>
+    <div class="stoi-hint">Solve for any one of the three values — enter the other two.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+      <button class="style-btn active" id="py-mode-yield"        onclick="Stoichiometry.pySetMode('yield')"       style="flex:1;min-width:120px;">Solve: % Yield</button>
+      <button class="style-btn"        id="py-mode-actual"       onclick="Stoichiometry.pySetMode('actual')"      style="flex:1;min-width:120px;">Solve: Actual Yield</button>
+      <button class="style-btn"        id="py-mode-theoretical"  onclick="Stoichiometry.pySetMode('theoretical')" style="flex:1;min-width:120px;">Solve: Theoretical Yield</button>
+    </div>
+    <div id="py-fields-stoi"></div>
+    <button class="stoi-calc-btn" onclick="Stoichiometry.pyCalculate()" style="margin-top:8px;">📈 Calculate % Yield</button>
+    <div id="py-results-stoi" style="margin-top:12px;"></div>
+  </div>
+
 </div>
   </section>
 
@@ -364,60 +385,6 @@
     <div class="results-scroll-wrapper">
       <div class="results-sheet" id="pc-results">
         <div class="placeholder-msg">📊 Enter a chemical formula and click <strong>Calculate % Composition</strong>.</div>
-      </div>
-    </div>
-  </div>
-</div>
-  </section>
-
-  <section id="tab-percent-yield" class="tab-panel">
-<div class="panel-layout">
-  <aside class="controls-panel">
-
-    <div class="control-group">
-      <div class="group-title">CALCULATION MODE</div>
-      <label>Solve For</label>
-      <div class="btn-group" style="margin-top:4px;">
-        <button class="style-btn active" id="py-mode-yield"    onclick="PercentYield.setMode('yield')">% Yield</button>
-        <button class="style-btn" id="py-mode-actual"   onclick="PercentYield.setMode('actual')">Actual Yield</button>
-        <button class="style-btn" id="py-mode-theoretical" onclick="PercentYield.setMode('theoretical')">Theoretical Yield</button>
-      </div>
-    </div>
-
-    <div class="control-group" id="py-fields">
-      <!-- Dynamically built based on mode -->
-    </div>
-
-    <button class="action-btn primary" onclick="PercentYield.calculate()" style="margin-top:4px;">📈 Calculate</button>
-    <button class="action-btn" onclick="PercentYield.clear()">Clear</button>
-
-    <div class="control-group">
-      <div class="group-title">ABOUT</div>
-      <div class="mini-note">
-        <strong>% Yield = (Actual / Theoretical) × 100</strong><br><br>
-        • <strong>Theoretical yield</strong> — maximum amount possible based on stoichiometry<br>
-        • <strong>Actual yield</strong> — amount actually collected from the experiment<br>
-        • <strong>% Yield</strong> — how efficient the reaction was<br><br>
-        Enter any two values and solve for the third.
-      </div>
-    </div>
-
-    <div class="control-group">
-      <div class="group-title">QUICK EXAMPLES</div>
-      <div style="display:flex;flex-direction:column;gap:4px;">
-        <button class="style-btn" onclick="PercentYield.loadExample('ex1')">Actual=4.6g, Theoretical=5.0g</button>
-        <button class="style-btn" onclick="PercentYield.loadExample('ex2')">% Yield=85%, Theoretical=12.0g</button>
-        <button class="style-btn" onclick="PercentYield.loadExample('ex3')">Actual=9.8g, % Yield=72%</button>
-      </div>
-    </div>
-
-  </aside>
-
-  <div class="preview-panel">
-    <div class="preview-label">Results — percent yield calculation</div>
-    <div class="results-scroll-wrapper">
-      <div class="results-sheet" id="py-results">
-        <div class="placeholder-msg">📈 Select what to solve for, enter two known values, and click <strong>Calculate</strong>.</div>
       </div>
     </div>
   </div>
@@ -496,7 +463,6 @@
 <script src="redox-balancer.js"></script>
 <script src="stoichiometry.js"></script>
 <script src="percent-composition.js"></script>
-<script src="percent-yield.js"></script>
 <script src="empirical-molecular.js"></script>
 
 </body>
