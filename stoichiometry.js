@@ -519,19 +519,27 @@ const Stoichiometry = (() => {
       kg: p.kg,
       molarMass: p.molarMass,
     }));
-    // Show the from-stoichiometry UI
-    _pyShowMode('stoi');
-    // Build product table
-    _pyBuildProductTable(dp);
-  }
 
-  function _pyShowMode(mode) {
+    // Build product table first
+    _pyBuildProductTable(dp);
+
+    // Show the from-stoichiometry UI — do this AFTER building the table
+    // so all child elements exist when we make the parent visible
     const fromEl   = document.getElementById('py-from-stoi');
     const manualEl = document.getElementById('py-manual');
     const phEl     = document.getElementById('py-placeholder');
-    if (fromEl)   fromEl.style.display   = mode === 'stoi'   ? '' : 'none';
-    if (manualEl) manualEl.style.display = mode === 'manual' ? '' : 'none';
-    if (phEl)     phEl.style.display     = mode === 'placeholder' ? '' : 'none';
+    if (phEl)     { phEl.style.display     = 'none'; }
+    if (manualEl) { manualEl.style.display = 'none'; }
+    if (fromEl)   { fromEl.style.display   = '';     }
+
+    // Highlight the % yield section and scroll to it
+    const section = document.getElementById('py-stoi-section');
+    if (section) {
+      section.style.border = '2px solid #4a90e2';
+      section.style.borderRadius = '8px';
+      setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+      setTimeout(() => { section.style.border = ''; section.style.borderRadius = ''; }, 3000);
+    }
   }
 
   function _pyBuildProductTable(dp) {
@@ -622,7 +630,12 @@ const Stoichiometry = (() => {
   }
 
   function pySetManual() {
-    _pyShowMode('manual');
+    const fromEl   = document.getElementById('py-from-stoi');
+    const manualEl = document.getElementById('py-manual');
+    const phEl     = document.getElementById('py-placeholder');
+    if (phEl)     { phEl.style.display     = 'none'; }
+    if (fromEl)   { fromEl.style.display   = 'none'; }
+    if (manualEl) { manualEl.style.display = '';     }
     pyBuildFields();
   }
 
