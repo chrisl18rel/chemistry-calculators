@@ -220,15 +220,16 @@ function parseMolecularSide(side) {
 
 function splitOnPlus(str) {
   const parts = [];
-  let depth = 0, current = '';
+  let parenDepth = 0, curlyDepth = 0, current = '';
   for (const ch of str) {
-    if (ch === '(') { depth++; current += ch; }
-    else if (ch === ')') {
-      // Don't close depth for state symbols like (aq) — handled below
-      current += ch;
-      if (depth > 0) depth--;
+    if (ch === '(') { parenDepth++; current += ch; }
+    else if (ch === ')') { current += ch; if (parenDepth > 0) parenDepth--; }
+    else if (ch === '{') { curlyDepth++; current += ch; }
+    else if (ch === '}') { current += ch; if (curlyDepth > 0) curlyDepth--; }
+    // Only split on + when outside both parens and curly braces
+    else if (ch === '+' && parenDepth === 0 && curlyDepth === 0) {
+      parts.push(current); current = '';
     }
-    else if (ch === '+' && depth === 0) { parts.push(current); current = ''; }
     else { current += ch; }
   }
   parts.push(current);
@@ -241,10 +242,10 @@ function parseMolecularCompound(token) {
 
   // Strip leading blanks/underscores
   s = s.replace(/^_+/, '').trim();
-  // Strip leading coefficient (digit before capital letter or open paren)
+  // Strip leading coefficient (digits before capital letter or open paren)
   s = s.replace(/^\d+(?=[A-Z(])/, '').trim();
 
-  // Extract state: (s), (l), (g), (aq) at the END of the token
+  // Extract state symbol: (s), (l), (g), (aq) at the END
   let state = null;
   const stateMatch = s.match(/\(\s*(s|l|g|aq)\s*\)\s*$/i);
   if (stateMatch) {
@@ -252,47 +253,41 @@ function parseMolecularCompound(token) {
     s = s.slice(0, stateMatch.index).trim();
   }
 
-  // Extract ion charge BEFORE removing whitespace
-  // Handles multiple notations:
-  //   "2-", "3+", "-", "+"    → mag then sign
-  //   "-1", "+2", "-2"        → sign then mag (e.g. I-1, Fe+2)
-  let charge = 0;
-  // Pattern A: digits then sign: "2-", "3+", "2+"
-  const chargeMatchA = s.match(/\s+(\d+)([+\-])\s*$/);
-  // Pattern B: sign then digits at end: "-1", "+2" (with optional space before)
-  const chargeMatchB = s.match(/([+\-])(\d+)\s*$/);
-  // Pattern C: bare sign at end: "-", "+"
-  const chargeMatchC = s.match(/\s+([+\-])\s*$/);
+  // Extract ion charge using formula-validated parsing
+  const { formula, charge } = extractIonCharge(s);
+  if (!formula) return null;
 
-  if (chargeMatchA) {
-    const sign = chargeMatchA[2] === '+' ? +1 : -1;
-    charge = sign * parseInt(chargeMatchA[1]);
-    s = s.slice(0, s.length - chargeMatchA[0].length).trim();
-  } else if (chargeMatchB) {
-    // Make sure this is actually trailing charge, not part of formula
-    // e.g. "I-1" — the "-1" at end is charge, formula is "I"
-    const sign = chargeMatchB[1] === '+' ? +1 : -1;
-    charge = sign * parseInt(chargeMatchB[2]);
-    s = s.slice(0, s.length - chargeMatchB[0].length).trim();
-  } else if (chargeMatchC) {
-    charge = chargeMatchC[1] === '+' ? +1 : -1;
-    s = s.slice(0, s.length - chargeMatchC[0].length).trim();
-  } else {
-    // Pattern D: sign directly appended with no space e.g. "MnO4-", "Fe2+", "S2O32-"
-    const chargeMatchD = s.match(/(\d*)([+\-])$/);
-    if (chargeMatchD) {
-      const sign = chargeMatchD[2] === '+' ? +1 : -1;
-      const mag  = chargeMatchD[1] ? parseInt(chargeMatchD[1]) : 1;
-      charge = sign * mag;
-      s = s.slice(0, s.length - chargeMatchD[0].length).trim();
-    }
+  return { formula, state, charge };
+}
+
+// Robustly extract formula and charge from an ion string using curly brace notation.
+// Users MUST write charges in curly braces: I3{-1}, S2O3{2-}, Fe{2+}, MnO4{-}
+// Neutral molecules/compounds are written without braces: Fe, H2O, CuSO4
+function extractIonCharge(s) {
+  s = s.trim().replace(/\s+/g, '');
+  if (!s) return { formula: '', charge: 0 };
+
+  // Curly brace notation: formula{charge}
+  // Supported charge formats inside braces:
+  //   "2-", "3+"        (magnitude then sign)
+  //   "-2", "+3", "-1"  (sign then magnitude)
+  //   "-", "+"          (bare sign, magnitude = 1)
+  const curlyMatch = s.match(/^(.+)\{([^}]+)\}$/);
+  if (curlyMatch) {
+    const formula = curlyMatch[1].trim();
+    const chargeStr = curlyMatch[2].trim();
+    const m1 = chargeStr.match(/^(\d+)([+\-])$/);  // "2-", "3+"
+    const m2 = chargeStr.match(/^([+\-])(\d+)$/);  // "+2", "-1"
+    const m3 = chargeStr.match(/^([+\-])$/);         // "+", "-"
+    let charge = 0;
+    if      (m1) charge = (m1[2] === '+' ? +1 : -1) * parseInt(m1[1]);
+    else if (m2) charge = (m2[1] === '+' ? +1 : -1) * parseInt(m2[2]);
+    else if (m3) charge = m3[1] === '+' ? +1 : -1;
+    return { formula, charge };
   }
 
-  // Remove any remaining whitespace inside formula
-  s = s.replace(/\s+/g, '');
-  if (!s) return null;
-
-  return { formula: s, state, charge };
+  // No curly braces — treat as neutral (molecular compound or elemental)
+  return { formula: s, charge: 0 };
 }
 
 // ═══════════════════════════════════════════════════════════════
