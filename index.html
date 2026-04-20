@@ -17,7 +17,7 @@
       <p>Molar mass · Equation balancing · Stoichiometry · Composition · Yield · Empirical formula</p>
     </div>
   </div>
-  <div class="app-version">v3.4</div>
+  <div class="app-version">v3.5</div>
 </header>
 
 <nav class="tab-nav">
@@ -26,6 +26,7 @@
   <button class="tab-btn" data-tab="redox-balancer">🔋 Redox Balancer</button>
   <button class="tab-btn" data-tab="stoichiometry">🧮 Stoichiometry</button>
   <button class="tab-btn" data-tab="percent-composition">📊 % Composition</button>
+  <button class="tab-btn" data-tab="percent-yield">📈 % Yield</button>
   <button class="tab-btn" data-tab="empirical-molecular">🔬 Empirical / Molecular</button>
 </nav>
 
@@ -391,6 +392,51 @@
 </div>
   </section>
 
+  <section id="tab-percent-yield" class="tab-panel">
+<div class="panel-layout">
+  <aside class="controls-panel">
+    <div class="control-group">
+      <div class="group-title">CALCULATION MODE</div>
+      <label>Solve For</label>
+      <div class="btn-group" style="margin-top:4px;">
+        <button class="style-btn active" id="py-mode-yield"        onclick="PercentYield.setMode('yield')">% Yield</button>
+        <button class="style-btn"        id="py-mode-actual"       onclick="PercentYield.setMode('actual')">Actual Yield</button>
+        <button class="style-btn"        id="py-mode-theoretical"  onclick="PercentYield.setMode('theoretical')">Theoretical Yield</button>
+      </div>
+    </div>
+    <div class="control-group" id="py-fields"><!-- Dynamically built --></div>
+    <button class="action-btn primary" onclick="PercentYield.calculate()" style="margin-top:4px;">📈 Calculate</button>
+    <button class="action-btn" onclick="PercentYield.clear()">Clear</button>
+    <div class="control-group">
+      <div class="group-title">ABOUT</div>
+      <div class="mini-note">
+        <strong>% Yield = (Actual / Theoretical) × 100</strong><br><br>
+        • <strong>Theoretical yield</strong> — maximum possible based on stoichiometry<br>
+        • <strong>Actual yield</strong> — amount collected from the experiment<br>
+        • <strong>% Yield</strong> — how efficient the reaction was<br><br>
+        Enter any two values to solve for the third.
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="group-title">QUICK EXAMPLES</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <button class="style-btn" onclick="PercentYield.loadExample('ex1')">Actual=4.6g, Theoretical=5.0g</button>
+        <button class="style-btn" onclick="PercentYield.loadExample('ex2')">% Yield=85%, Theoretical=12.0g</button>
+        <button class="style-btn" onclick="PercentYield.loadExample('ex3')">Actual=9.8g, % Yield=72%</button>
+      </div>
+    </div>
+  </aside>
+  <div class="preview-panel">
+    <div class="preview-label">Results — percent yield calculation</div>
+    <div class="results-scroll-wrapper">
+      <div class="results-sheet" id="py-results">
+        <div class="placeholder-msg">📈 Select what to solve for, enter two known values, and click <strong>Calculate</strong>.</div>
+      </div>
+    </div>
+  </div>
+</div>
+  </section>
+
   <section id="tab-empirical-molecular" class="tab-panel">
 <div class="panel-layout">
   <aside class="controls-panel">
@@ -463,6 +509,7 @@
 <script src="redox-balancer.js"></script>
 <script src="stoichiometry.js"></script>
 <script src="percent-composition.js"></script>
+<script src="percent-yield.js"></script>
 <script src="empirical-molecular.js"></script>
 
 </body>
