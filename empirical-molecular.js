@@ -76,6 +76,85 @@ const EmpiricalMolecular = (() => {
     if (inputs.length) inputs[inputs.length - 1].focus();
   }
 
+  // Build a proper chemical formula from elements + integer subscripts.
+  // Applies Hill notation (C first, H second, then alphabetical) and groups
+  // common polyatomic ions into parentheses: OH, NH, SO4, NO3, CO3, PO4, etc.
+  function buildChemicalFormula(elements, integers) {
+    // Build element→count map
+    const countMap = {};
+    elements.forEach((el, i) => { countMap[el] = (countMap[el] || 0) + integers[i]; });
+
+    // Try to apply common polyatomic groupings
+    // Each grouping: { elements: {El: count}, name: 'OH' }
+    // Only apply if ALL elements of the group are present with at least the right ratio
+    const GROUPS = [
+      { els: { O:1, H:1 }, sym: 'OH'  },
+      { els: { N:1, H:4 }, sym: 'NH4' },
+      { els: { S:1, O:4 }, sym: 'SO4' },
+      { els: { N:1, O:3 }, sym: 'NO3' },
+      { els: { N:1, O:2 }, sym: 'NO2' },
+      { els: { C:1, O:3 }, sym: 'CO3' },
+      { els: { C:1, O:2 }, sym: 'CO2' },
+      { els: { P:1, O:4 }, sym: 'PO4' },
+      { els: { C:2, H:3, O:2 }, sym: 'C2H3O2' },
+      { els: { C:1, N:1 }, sym: 'CN' },
+    ];
+
+    let remaining = { ...countMap };
+    const parts = []; // { sym, coeff }
+
+    // Try each group — find how many times it fits
+    for (const g of GROUPS) {
+      const groupEls = Object.keys(g.els);
+      // Check all group elements are present in remaining
+      if (!groupEls.every(el => remaining[el] > 0)) continue;
+      // Find how many times the group divides evenly
+      const fits = Math.min(...groupEls.map(el => Math.floor(remaining[el] / g.els[el])));
+      if (fits < 1) continue;
+      // Only apply if it uses up ALL counts of the group elements evenly
+      const usesAll = groupEls.every(el => remaining[el] % g.els[el] === 0);
+      if (!usesAll) continue;
+      parts.push({ sym: g.sym, coeff: fits });
+      groupEls.forEach(el => { remaining[el] -= g.els[el] * fits; });
+      // Clean up zeros
+      groupEls.forEach(el => { if (remaining[el] === 0) delete remaining[el]; });
+    }
+
+    // Remaining elements in Hill order: C, H, then alphabetical
+    const remaining_els = Object.keys(remaining);
+    const hillOrder = [
+      ...(['C','H'].filter(el => remaining[el])),
+      ...remaining_els.filter(el => el !== 'C' && el !== 'H').sort(),
+    ];
+
+    // Build the cation part (non-polyatomic elements)
+    // For common metal+polyatomic patterns, put metal first
+    const METALS = new Set(['Li','Na','K','Rb','Cs','Mg','Ca','Sr','Ba','Al','Zn',
+      'Fe','Cu','Mn','Cr','Ni','Co','Pb','Sn','Ag','Hg']);
+    const metals   = hillOrder.filter(el => METALS.has(el));
+    const nonMetals= hillOrder.filter(el => !METALS.has(el));
+    const orderedEls = [...metals, ...nonMetals];
+
+    let formula = '';
+    // Write remaining elements first
+    orderedEls.forEach(el => {
+      const cnt = remaining[el];
+      formula += el + (cnt > 1 ? cnt : '');
+    });
+    // Write polyatomic groups
+    parts.forEach(p => {
+      if (p.coeff === 1) formula += p.sym;
+      else formula += `(${p.sym})${p.coeff}`;
+    });
+
+    // Fallback: if formula is empty or didn't work, use simple concatenation
+    if (!formula) {
+      formula = elements.map((el, i) => el + (integers[i] > 1 ? integers[i] : '')).join('');
+    }
+
+    return formula;
+  }
+
   function calculate() {
     // Read current values from DOM
     const elInputs  = document.querySelectorAll('.element-row input[type="text"]');
@@ -147,8 +226,8 @@ const EmpiricalMolecular = (() => {
     const g = integers.reduce((a, b) => gcd(Math.abs(a), Math.abs(b)), 0);
     if (g > 1) integers = integers.map(t => t / g);
 
-    // Build empirical formula
-    const empiricalFormula = elements.map((el, i) => el + (integers[i] > 1 ? integers[i] : '')).join('');
+    // Build empirical formula using smart ordering and polyatomic grouping
+    const empiricalFormula = buildChemicalFormula(elements, integers);
     let empiricalMass;
     try { empiricalMass = computeMolarMass(empiricalFormula).mass; }
     catch(e) { empiricalMass = null; }
@@ -159,7 +238,8 @@ const EmpiricalMolecular = (() => {
     if (hasMolarMass && empiricalMass) {
       n = Math.round(molarMassInput / empiricalMass);
       if (n < 1) n = 1;
-      molecularFormula = elements.map((el, i) => el + (integers[i] * n > 1 ? integers[i] * n : '')).join('');
+      const molIntegers = integers.map(x => x * n);
+      molecularFormula = buildChemicalFormula(elements, molIntegers);
     }
 
     renderResults(elements, values, moles, ratios, integers, empiricalFormula, empiricalMass,
