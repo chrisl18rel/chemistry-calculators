@@ -262,8 +262,34 @@ const PhCalculator = (() => {
 
     const compound = detectCompound(raw);
     if (!compound) {
-      resultEl.innerHTML = `<div class="mini-note" style="color:#e94560;">
-        ⚠ Compound not recognized. You can still calculate using the manual modes.</div>`;
+      resultEl.innerHTML = `<div style="background:#fff8e1;border:1px solid #ffc107;
+        border-radius:5px;padding:8px 10px;font-size:12px;line-height:1.6;">
+        <strong style="color:#856404;">⚠ Compound not in database.</strong>
+        Tell us what type it is and we'll proceed:
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
+          <label class="stoi-radio" style="font-size:12px;">
+            <input type="radio" name="ph-smart-override" value="strong-acid"
+              onchange="PhCalculator.smartOverrideChanged()" /> Strong Acid
+          </label>
+          <label class="stoi-radio" style="font-size:12px;">
+            <input type="radio" name="ph-smart-override" value="strong-base"
+              onchange="PhCalculator.smartOverrideChanged()" /> Strong Base
+          </label>
+          <label class="stoi-radio" style="font-size:12px;">
+            <input type="radio" name="ph-smart-override" value="weak-acid"
+              onchange="PhCalculator.smartOverrideChanged()" /> Weak Acid
+          </label>
+          <label class="stoi-radio" style="font-size:12px;">
+            <input type="radio" name="ph-smart-override" value="weak-base"
+              onchange="PhCalculator.smartOverrideChanged()" /> Weak Base
+          </label>
+        </div>
+        <div id="ph-smart-override-n" style="display:none;margin-top:6px;">
+          <label class="stoi-lbl" style="font-size:11px;">Ions per formula unit (e.g. 2 for Ca(OH)₂)</label>
+          <input type="number" id="ph-smart-n-override" min="1" step="1" value="1"
+            class="stoi-num-input" style="width:60px;" />
+        </div>
+      </div>`;
       smartUpdateKField(null);
       return;
     }
@@ -324,6 +350,29 @@ const PhCalculator = (() => {
     }
   }
 
+  function smartOverrideChanged() {
+    const overrideType = document.querySelector('input[name="ph-smart-override"]:checked')?.value;
+    // Show n-override field for strong bases (e.g. Ca(OH)2) and strong acids (e.g. H2SO4)
+    const nRow = document.getElementById('ph-smart-override-n');
+    if (nRow) nRow.style.display = (overrideType === 'strong-base' || overrideType === 'strong-acid') ? '' : 'none';
+    // Show/hide K field based on override type
+    const isWeak = overrideType === 'weak-acid' || overrideType === 'weak-base';
+    const kField = document.getElementById('ph-smart-k-field');
+    if (kField) {
+      kField.style.display = isWeak ? '' : 'none';
+      if (isWeak) {
+        const noteEl = document.getElementById('ph-smart-k-note');
+        if (noteEl) noteEl.textContent = 'Enter Ka or Kb (e.g. 1.8e-5)';
+        const kInput = document.getElementById('ph-smart-kval');
+        if (kInput) kInput.placeholder = 'e.g. 1.8e-5';
+        // Default radio to Ka for weak acid, Kb for weak base
+        const preferred = overrideType === 'weak-acid' ? 'Ka' : 'Kb';
+        const radio = document.querySelector(`input[name="ph-smart-ktype"][value="${preferred}"]`);
+        if (radio) radio.checked = true;
+      }
+    }
+  }
+
   function smartUpdateFields() {
     const known = document.querySelector('input[name="ph-smart-known"]:checked')?.value || 'conc';
     const labels = {
@@ -375,10 +424,21 @@ const PhCalculator = (() => {
     const valRaw = parseFloat(document.getElementById('ph-smart-val')?.value);
     if (isNaN(valRaw)) throw new Error('Enter a value for the known quantity.');
 
-    // Resolve compound type — if unrecognized, we can still solve from pH/pOH/[H3O+]/[OH-]
-    const cType  = compound?.type || null;
-    const n      = compound?.n || 1;
-    const cName  = compound ? `${compound.name} (${compound.f})` : raw;
+    // If compound not recognized, check for manual override
+    let overrideType = null;
+    let overrideN = 1;
+    if (!compound) {
+      overrideType = document.querySelector('input[name="ph-smart-override"]:checked')?.value || null;
+      if (!overrideType && known === 'conc') {
+        throw new Error('Compound not recognized. Please select the substance type (Strong Acid, Weak Acid, etc.) that appeared below the formula field.');
+      }
+      overrideN = parseInt(document.getElementById('ph-smart-n-override')?.value) || 1;
+    }
+
+    // Resolve compound type — use detected or manual override
+    const cType  = compound?.type || overrideType;
+    const n      = compound?.n || overrideN;
+    const cName  = compound ? `${compound.name} (${compound.f})` : `${raw} (type manually specified)`;
 
     // ── Convert known value to [H3O+] and [OH-] ──
     let pH, pOH, h3o, oh;
@@ -409,7 +469,7 @@ const PhCalculator = (() => {
       h3o = Math.pow(10, -pH);
     } else {
       // Concentration — need compound type to proceed
-      if (!compound) throw new Error('Compound not recognized. Enter pH, pOH, [H₃O⁺], or [OH⁻] directly, or use a manual mode.');
+      if (!compound && !overrideType) throw new Error('Compound not recognized. Please select the substance type below the formula field.');
       concentrationProvided = true;
       C = valRaw;
       if (C <= 0) throw new Error('Concentration must be positive.');
@@ -1280,7 +1340,7 @@ const PhCalculator = (() => {
     buildInputs();
   }
 
-  return { init, setMode, calculate, clearAll, exportCurve, smartDetect, smartUpdateFields };
+  return { init, setMode, calculate, clearAll, exportCurve, smartDetect, smartUpdateFields, smartOverrideChanged };
 })();
 
 window.addEventListener('load', () => PhCalculator.init());
