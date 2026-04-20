@@ -263,7 +263,7 @@ const Stoichiometry = (() => {
 
     results.filter(c => c !== given).forEach(c => {
       html += `<div class="stoi-step-sub">
-        ${formulaToHTML(c.formula)}: ${fmtVal(results.find(r=>r===given).moles,dp)} mol ${formulaToHTML(given.formula)}
+        ${formulaToHTML(c.formula)}: ${fmtVal(results.find(r=>r.isGiven).moles,dp)} mol ${formulaToHTML(given.formula)}
         × (${c.coeff} mol ${formulaToHTML(c.formula)} / ${given.coeff} mol ${formulaToHTML(given.formula)})
         = ${fmtVal(c.moles,dp)} mol ${formulaToHTML(c.formula)} (${fmtVal(c.grams,dp)} g)
       </div>`;
@@ -272,9 +272,11 @@ const Stoichiometry = (() => {
     html += `</div>`; // close stoi-steps-box
     rContent.innerHTML = html;
     rSection.style.display = '';
-  }
 
-  // ── CALCULATE LIMITING ──
+    // Pass product theoretical yields to % yield section
+    const productResults = results.filter(c => c.role === 'product');
+    populatePyFromResults(productResults, dp);
+  }
   function calculateLimiting() {
     if (!balanced) { showAlert('Balance the equation first.', true); return; }
     const dp = parseInt(document.getElementById('stoi-limit-sig-figs')?.value) || 4;
@@ -415,9 +417,10 @@ const Stoichiometry = (() => {
     html += `</div>`; // close steps-box
     rContent.innerHTML = html;
     rSection.style.display = '';
-  }
 
-  // ── STANDARD RESULTS TABLE ──
+    // Pass product theoretical yields to % yield section
+    populatePyFromResults(productResults, dp);
+  }
   function buildResultsTable(results, dp) {
     const reactants = results.filter(c => c.role === 'reactant');
     const products  = results.filter(c => c.role === 'product');
@@ -504,7 +507,23 @@ const Stoichiometry = (() => {
   }
 
   // ── PERCENT YIELD (integrated) ──
-  let pyMode = 'yield'; // 'yield' | 'actual' | 'theoretical'
+  let pyMode = 'yield';
+  let pyTheoreticalOptions = []; // populated from stoichiometry results
+
+  function populatePyFromResults(products, dp) {
+    pyTheoreticalOptions = products.map(p => ({
+      formula: p.formula,
+      moles: p.moles,
+      grams: p.grams,
+      kg: p.kg,
+      label: `${formulaToHTML(p.formula)} — ${p.grams.toFixed(dp)} g / ${p.moles.toFixed(dp)} mol`,
+    }));
+    // Rebuild fields to show the new dropdown
+    pyBuildFields();
+    // Scroll % yield section into view
+    const pyEl = document.getElementById('py-fields-stoi');
+    if (pyEl) pyEl.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
 
   function pySetMode(m) {
     pyMode = m;
@@ -519,33 +538,87 @@ const Stoichiometry = (() => {
     const container = document.getElementById('py-fields-stoi');
     if (!container) return;
 
-    const labels = { actual:'Actual Yield', theoretical:'Theoretical Yield', pct:'% Yield' };
-    const units  = { actual:'', theoretical:'', pct:'%' };
-    const show   = { yield:['actual','theoretical'], actual:['theoretical','pct'], theoretical:['actual','pct'] };
+    const unitRow = (key) => `
+      <div class="stoi-radio-row" style="margin-top:4px;">
+        <label class="stoi-radio"><input type="radio" name="py-stoi-unit-${key}" value="g" checked /> g</label>
+        <label class="stoi-radio"><input type="radio" name="py-stoi-unit-${key}" value="kg" /> kg</label>
+        <label class="stoi-radio"><input type="radio" name="py-stoi-unit-${key}" value="mol" /> mol</label>
+      </div>`;
 
     let html = '';
-    show[pyMode].forEach(key => {
-      html += `<div class="stoi-input-grid" style="margin-bottom:8px;">
-        <div class="stoi-input-cell">
-          <label class="stoi-lbl">${labels[key]}</label>
-          <input type="number" id="py-stoi-${key}" min="0" step="any" placeholder="0" class="stoi-num-input" style="width:120px;" />
-        </div>`;
-      if (key !== 'pct') {
-        html += `<div class="stoi-input-cell">
-          <label class="stoi-lbl">Unit</label>
-          <div class="stoi-radio-row">
-            <label class="stoi-radio"><input type="radio" name="py-stoi-unit-${key}" value="g" checked /> g</label>
-            <label class="stoi-radio"><input type="radio" name="py-stoi-unit-${key}" value="kg" /> kg</label>
-            <label class="stoi-radio"><input type="radio" name="py-stoi-unit-${key}" value="mol" /> mol</label>
+
+    // If solving for % yield or actual, we need theoretical
+    // Show dropdown from stoichiometry if available
+    if (pyMode === 'yield' || pyMode === 'actual') {
+      if (pyTheoreticalOptions.length > 0) {
+        html += `<div class="stoi-input-grid" style="margin-bottom:10px;background:#f0f6ff;border:1px solid #c8d5ee;border-radius:6px;padding:10px;">
+          <div class="stoi-input-cell" style="width:100%;">
+            <label class="stoi-lbl" style="color:#1a56a8;">📊 Use Theoretical Yield from Stoichiometry</label>
+            <select id="py-stoi-theo-sel" class="stoi-select" style="width:100%;background:#fff;color:#111;border-color:#c8d5ee;" onchange="Stoichiometry.pyApplyTheo()">
+              <option value="">— select a product —</option>
+              ${pyTheoreticalOptions.map((p,i) => `<option value="${i}">${p.formula} — ${p.grams.toFixed(4)} g / ${p.moles.toFixed(4)} mol</option>`).join('')}
+            </select>
           </div>
         </div>`;
       }
-      html += `</div>`;
-    });
-    html += `<div class="mini-note" style="margin-top:4px;color:#1a56a8;">Solving for: <strong>${
+      // Theoretical manual entry
+      html += `<div class="stoi-input-grid" style="margin-bottom:8px;">
+        <div class="stoi-input-cell">
+          <label class="stoi-lbl">Theoretical Yield${pyTheoreticalOptions.length ? ' (or enter manually)' : ''}</label>
+          <input type="number" id="py-stoi-theoretical" min="0" step="any" placeholder="0" class="stoi-num-input" style="width:120px;" />
+        </div>
+        <div class="stoi-input-cell"><label class="stoi-lbl">Unit</label>${unitRow('theoretical')}</div>
+      </div>`;
+    }
+
+    if (pyMode === 'yield' || pyMode === 'theoretical') {
+      html += `<div class="stoi-input-grid" style="margin-bottom:8px;">
+        <div class="stoi-input-cell">
+          <label class="stoi-lbl">Actual Yield</label>
+          <input type="number" id="py-stoi-actual" min="0" step="any" placeholder="0" class="stoi-num-input" style="width:120px;" />
+        </div>
+        <div class="stoi-input-cell"><label class="stoi-lbl">Unit</label>${unitRow('actual')}</div>
+      </div>`;
+    }
+
+    if (pyMode === 'actual' || pyMode === 'theoretical') {
+      html += `<div class="stoi-input-grid" style="margin-bottom:8px;">
+        <div class="stoi-input-cell">
+          <label class="stoi-lbl">% Yield</label>
+          <input type="number" id="py-stoi-pct" min="0" max="100" step="any" placeholder="0" class="stoi-num-input" style="width:120px;" />
+        </div>
+        <div class="stoi-input-cell"><label class="stoi-lbl" style="color:#888;font-size:10px;">%</label></div>
+      </div>`;
+    }
+
+    if (pyMode === 'theoretical' && pyTheoreticalOptions.length === 0) {
+      html += `<div class="stoi-input-grid" style="margin-bottom:8px;">
+        <div class="stoi-input-cell">
+          <label class="stoi-lbl">Theoretical Yield</label>
+          <input type="number" id="py-stoi-theoretical" min="0" step="any" placeholder="0" class="stoi-num-input" style="width:120px;" />
+        </div>
+        <div class="stoi-input-cell"><label class="stoi-lbl">Unit</label>${unitRow('theoretical')}</div>
+      </div>`;
+    }
+
+    html += `<div class="mini-note" style="color:#1a56a8;">Solving for: <strong>${
       pyMode === 'yield' ? '% Yield' : pyMode === 'actual' ? 'Actual Yield' : 'Theoretical Yield'
     }</strong></div>`;
     container.innerHTML = html;
+  }
+
+  function pyApplyTheo() {
+    const sel = document.getElementById('py-stoi-theo-sel');
+    if (!sel || sel.value === '') return;
+    const opt = pyTheoreticalOptions[parseInt(sel.value)];
+    if (!opt) return;
+    // Populate the theoretical input based on selected unit
+    const unit = document.querySelector('input[name="py-stoi-unit-theoretical"]:checked')?.value || 'g';
+    const inp = document.getElementById('py-stoi-theoretical');
+    if (!inp) return;
+    if (unit === 'g')   inp.value = opt.grams.toFixed(6);
+    else if (unit === 'kg') inp.value = opt.kg.toFixed(6);
+    else if (unit === 'mol') inp.value = opt.moles.toFixed(6);
   }
 
   function pyGetVal(key) {
@@ -643,7 +716,7 @@ const Stoichiometry = (() => {
   }
 
   return { init, balanceStep, onModeToggle, calculateStandard, calculateLimiting, exportPNG, clear,
-           pySetMode, pyCalculate };
+           pySetMode, pyCalculate, pyApplyTheo };
 })();
 
 window.addEventListener('load', () => {
