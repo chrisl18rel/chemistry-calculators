@@ -1,7 +1,5 @@
 <!-- index.html -->
-
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -35,57 +33,459 @@
 <main class="app-body">
 
   <section id="tab-molar-mass" class="tab-panel active">
-    <div id="molar-mass-container"></div>
+<div class="panel-layout">
+  <aside class="controls-panel">
+
+    <div class="control-group">
+      <div class="group-title">FORMULA INPUT</div>
+      <label>Chemical Formula</label>
+      <input type="text" id="mm-formula" class="formula-input"
+             placeholder="e.g. H2O, CuSO4*5H2O, Ca(OH)2"
+             autocomplete="off" autocorrect="off" spellcheck="false" />
+      <div class="mini-note">
+        Supports parentheses Ca(OH)₂, hydrates CuSO₄*5H₂O (use * for the dot), and all 118 elements.
+        Use plain digits — they auto-convert to subscripts.
+      </div>
+      <button class="action-btn primary" onclick="MolarMass.calculate()" style="margin-top:10px;">
+        Calculate Molar Mass
+      </button>
+      <button class="action-btn" onclick="MolarMass.clear()">Clear</button>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">QUICK EXAMPLES</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <button class="style-btn" onclick="MolarMass.loadExample('H2O')">H₂O — Water</button>
+        <button class="style-btn" onclick="MolarMass.loadExample('NaCl')">NaCl — Sodium Chloride</button>
+        <button class="style-btn" onclick="MolarMass.loadExample('Ca(OH)2')">Ca(OH)₂ — Calcium Hydroxide</button>
+        <button class="style-btn" onclick="MolarMass.loadExample('CuSO4*5H2O')">CuSO₄*5H₂O — Copper(II) Sulfate Hydrate</button>
+        <button class="style-btn" onclick="MolarMass.loadExample('C6H12O6')">C₆H₁₂O₆ — Glucose</button>
+        <button class="style-btn" onclick="MolarMass.loadExample('Fe2(SO4)3')">Fe₂(SO₄)₃ — Iron(III) Sulfate</button>
+        <button class="style-btn" onclick="MolarMass.loadExample('Al2(SO4)3')">Al₂(SO₄)₃ — Aluminum Sulfate</button>
+        <button class="style-btn" onclick="MolarMass.loadExample('(NH4)2SO4')">(NH₄)₂SO₄ — Ammonium Sulfate</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">DISPLAY OPTIONS</div>
+      <div class="toggle-row">
+        <label class="toggle-label">
+          <input type="checkbox" id="mm-show-breakdown" checked />
+          Show element breakdown
+        </label>
+      </div>
+      <div class="toggle-row">
+        <label class="toggle-label">
+          <input type="checkbox" id="mm-show-percent" checked />
+          Show percent composition
+        </label>
+      </div>
+    </div>
+
+  </aside>
+
+  <div class="preview-panel">
+    <div class="preview-label">Results — molar mass breakdown and percent composition</div>
+    <div class="results-scroll-wrapper">
+      <div class="results-sheet" id="mm-results">
+        <div class="placeholder-msg">⚛️ Enter a chemical formula and click <strong>Calculate</strong> to see results.</div>
+      </div>
+    </div>
+  </div>
+</div>
   </section>
 
   <section id="tab-equation-balancer" class="tab-panel">
-    <div id="equation-balancer-container"></div>
+<div class="panel-layout">
+  <aside class="controls-panel">
+
+    <div class="control-group">
+      <div class="group-title">EQUATION INPUT</div>
+      <div class="mini-note" style="margin-bottom:8px;">
+        Paste or type a full equation. Blanks, state symbols, and existing coefficients are ignored automatically.
+      </div>
+      <textarea id="eb-equation" class="formula-input" rows="4"
+        placeholder="e.g. Al4C3 + H2O → CH4 + Al(OH)3"
+        autocomplete="off" autocorrect="off" spellcheck="false"
+        style="resize:vertical;line-height:1.6;"></textarea>
+      <div class="display-divider"></div>
+      <button class="action-btn primary" onclick="EqBalancer.balance()">⚖️ Balance Equation</button>
+      <button class="action-btn" onclick="EqBalancer.clear()">Clear</button>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">QUICK EXAMPLES</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <button class="style-btn" onclick="EqBalancer.loadExample('combustion')">Combustion of Methane</button>
+        <button class="style-btn" onclick="EqBalancer.loadExample('photosynthesis')">Photosynthesis</button>
+        <button class="style-btn" onclick="EqBalancer.loadExample('ironrust')">Iron Rusting</button>
+        <button class="style-btn" onclick="EqBalancer.loadExample('haber')">Haber Process (N₂ + H₂)</button>
+        <button class="style-btn" onclick="EqBalancer.loadExample('thermite')">Thermite Reaction</button>
+        <button class="style-btn" onclick="EqBalancer.loadExample('al4c3')">Al₄C₃ + H₂O (with blanks)</button>
+        <button class="style-btn" onclick="EqBalancer.loadExample('fecuso4')">Fe + CuSO₄ (with states)</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">TIPS</div>
+      <div class="mini-note">
+        • Paste directly from a worksheet — blanks like <strong>___</strong> or <strong>____</strong> are stripped automatically<br>
+        • State symbols <strong>(s)</strong>, <strong>(l)</strong>, <strong>(g)</strong>, <strong>(aq)</strong> are ignored<br>
+        • Existing coefficients are removed before balancing<br>
+        • Use any arrow: <strong>→</strong>, <strong>🡪</strong>, <strong>=&gt;</strong>, or <strong>-&gt;</strong><br>
+        • Separate compounds with <strong>+</strong><br>
+        • Use parentheses for polyatomic ions: <strong>Ca(OH)2</strong><br>
+        • Use <strong>*</strong> for hydrates: <strong>CuSO4*5H2O</strong><br>
+        • For redox equations use the <strong>Redox Balancer</strong> tab
+      </div>
+    </div>
+
+  </aside>
+
+  <div class="preview-panel">
+    <div class="preview-label">Results — balanced equation with coefficient verification</div>
+    <div class="results-scroll-wrapper">
+      <div class="results-sheet" id="eb-results">
+        <div class="placeholder-msg">⚖️ Type or paste an equation, then click <strong>Balance Equation</strong>.</div>
+      </div>
+    </div>
+  </div>
+</div>
   </section>
 
   <section id="tab-redox-balancer" class="tab-panel">
-    <div id="redox-balancer-container"></div>
+<div class="panel-layout">
+  <aside class="controls-panel">
+
+    <div class="control-group">
+      <div class="group-title">MOLECULAR EQUATION INPUT</div>
+      <div class="mini-note" style="margin-bottom:8px;">
+        Enter the full molecular equation with state symbols. State symbols are required — they tell the tool which compounds dissociate into ions.
+      </div>
+      <textarea id="rx-equation" class="formula-input" rows="4"
+        placeholder="e.g. Zn(s) + CuSO4(aq) → ZnSO4(aq) + Cu(s)"
+        autocomplete="off" autocorrect="off" spellcheck="false"
+        style="resize:vertical;line-height:1.6;"></textarea>
+      <div class="mini-note" style="margin-top:4px;">
+        <strong>State symbols:</strong> (s) solid · (l) liquid · (g) gas · (aq) dissolved in water<br>
+        Use → or -> for the arrow. Ctrl+Enter to submit.
+      </div>
+      <div class="display-divider"></div>
+      <label>Reaction Medium</label>
+      <div class="btn-group" style="margin-top:4px;">
+        <button class="style-btn active" id="rx-acid-btn" onclick="RedoxBalancer.setMedium('acidic')">Acidic (H⁺)</button>
+        <button class="style-btn" id="rx-base-btn" onclick="RedoxBalancer.setMedium('basic')">Basic (OH⁻)</button>
+      </div>
+      <div class="display-divider"></div>
+      <button class="action-btn primary" onclick="RedoxBalancer.balance()">🔋 Balance Redox Equation</button>
+      <button class="action-btn" onclick="RedoxBalancer.clear()">Clear</button>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">QUICK EXAMPLES</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <button class="style-btn" onclick="RedoxBalancer.loadExample('zncu')">Zn + CuSO₄ (single replacement)</button>
+        <button class="style-btn" onclick="RedoxBalancer.loadExample('feag')">Cu + AgNO₃ (single replacement)</button>
+        <button class="style-btn" onclick="RedoxBalancer.loadExample('ironrust')">Fe + HCl (acid-metal)</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">TIPS</div>
+      <div class="mini-note">
+        • <strong>State symbols are required</strong> — (aq) compounds are split into ions; (s), (l), (g) stay as formula units<br>
+        • Solubility rules and weak acid/base rules are applied automatically<br>
+        • Spectator ions are identified and cancelled to give the net ionic equation<br>
+        • Oxidation numbers are assigned automatically — fractional states supported<br>
+        • Steps follow the half-reaction method for acidic or basic solutions<br>
+        • For very complex multi-element redox, results may need manual verification
+      </div>
+    </div>
+
+  </aside>
+
+  <div class="preview-panel">
+    <div class="preview-label">Results — step-by-step half-reaction method</div>
+    <div class="results-scroll-wrapper">
+      <div class="results-sheet" id="rx-results">
+        <div class="placeholder-msg">🔋 Enter a molecular equation with state symbols and click <strong>Balance Redox Equation</strong>.</div>
+      </div>
+    </div>
+  </div>
+</div>
   </section>
 
   <section id="tab-stoichiometry" class="tab-panel">
-    <div id="stoichiometry-container"></div>
+<div class="stoi-fullpage">
+
+  <!-- ── EQUATION INPUT ── -->
+  <div class="stoi-section">
+    <div class="stoi-section-title">Step 1: Enter Chemical Equation</div>
+    <div class="stoi-hint">Paste or type a full equation. Blanks, state symbols, and existing coefficients are stripped automatically.</div>
+    <div class="stoi-eq-row">
+      <textarea id="stoi-eq-input" class="stoi-eq-textarea formula-input"
+        placeholder="e.g. H2 + O2 → H2O   or   ___Al4C3 + ___H2O → ___CH4 + ___Al(OH)3"
+        autocomplete="off" autocorrect="off" spellcheck="false" rows="2"></textarea>
+      <button class="stoi-balance-btn" onclick="Stoichiometry.balanceStep()">⚖️ Balance</button>
+    </div>
+    <div id="stoi-balanced-display" style="display:none;">
+      <div class="stoi-balanced-label">Balanced Equation:</div>
+      <div class="stoi-balanced-eq" id="stoi-balanced-eq"></div>
+    </div>
+  </div>
+
+  <!-- ── MODE TOGGLE ── -->
+  <div class="stoi-section" id="stoi-mode-section" style="display:none;">
+    <div class="stoi-section-title">Step 2: Select Calculation Mode</div>
+    <div class="stoi-mode-toggle-row">
+      <span class="stoi-mode-label" id="stoi-label-standard">Standard Stoichiometry</span>
+      <label class="toggle-switch" style="margin:0 10px;">
+        <input type="checkbox" id="stoi-mode-chk" onchange="Stoichiometry.onModeToggle()" />
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="stoi-mode-label" id="stoi-label-limiting">Limiting Reactant</span>
+    </div>
+  </div>
+
+  <!-- ── STANDARD MODE INPUTS ── -->
+  <div class="stoi-section" id="stoi-standard-section" style="display:none;">
+    <div class="stoi-section-title">Step 3: Enter Known Quantity</div>
+    <div class="stoi-input-grid">
+      <div class="stoi-input-cell">
+        <label class="stoi-lbl">Given Compound</label>
+        <select id="stoi-given-sel" class="stoi-select"></select>
+      </div>
+      <div class="stoi-input-cell">
+        <label class="stoi-lbl">Amount</label>
+        <input type="number" id="stoi-given-amt" class="stoi-num-input" min="0" step="any" placeholder="0" />
+      </div>
+      <div class="stoi-input-cell">
+        <label class="stoi-lbl">Unit</label>
+        <div class="stoi-radio-row">
+          <label class="stoi-radio"><input type="radio" name="stoi-unit" value="mol" checked /> mol</label>
+          <label class="stoi-radio"><input type="radio" name="stoi-unit" value="g" /> g</label>
+          <label class="stoi-radio"><input type="radio" name="stoi-unit" value="kg" /> kg</label>
+        </div>
+      </div>
+      <div class="stoi-input-cell">
+        <label class="stoi-lbl">Round to</label>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="number" id="stoi-sig-figs" class="stoi-num-input" value="4" min="1" max="10" step="1" style="width:60px;" />
+          <span style="font-size:12px;color:#8a8a9a;">decimal places</span>
+        </div>
+      </div>
+    </div>
+    <button class="stoi-calc-btn" onclick="Stoichiometry.calculateStandard()">🧮 Calculate Stoichiometry</button>
+  </div>
+
+  <!-- ── LIMITING MODE INPUTS ── -->
+  <div class="stoi-section" id="stoi-limiting-section" style="display:none;">
+    <div class="stoi-section-title">Step 3: Enter Available Amounts for Each Reactant</div>
+    <div class="stoi-hint">Enter how much of each reactant you have available.</div>
+    <div id="stoi-limit-inputs-container"></div>
+    <div class="stoi-input-grid" style="margin-top:10px;">
+      <div class="stoi-input-cell">
+        <label class="stoi-lbl">Round to</label>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="number" id="stoi-limit-sig-figs" class="stoi-num-input" value="4" min="1" max="10" step="1" style="width:60px;" />
+          <span style="font-size:12px;color:#8a8a9a;">decimal places</span>
+        </div>
+      </div>
+    </div>
+    <button class="stoi-calc-btn" onclick="Stoichiometry.calculateLimiting()">🧮 Calculate Limiting Reactant</button>
+  </div>
+
+  <!-- ── RESULTS ── -->
+  <div id="stoi-results-section" style="display:none;">
+    <div class="stoi-section">
+      <div id="stoi-results-content"></div>
+      <div style="margin-top:12px;text-align:right;">
+        <button class="stoi-export-btn" onclick="Stoichiometry.exportPNG()">⬇ Export Results as PNG</button>
+      </div>
+    </div>
+  </div>
+
+</div>
   </section>
 
   <section id="tab-percent-composition" class="tab-panel">
-    <div id="percent-composition-container"></div>
+<div class="panel-layout">
+  <aside class="controls-panel">
+
+    <div class="control-group">
+      <div class="group-title">FORMULA INPUT</div>
+      <label>Chemical Formula</label>
+      <input type="text" id="pc-formula" class="formula-input"
+             placeholder="e.g. H2O, Fe2O3, CuSO4*5H2O"
+             autocomplete="off" spellcheck="false" />
+      <div class="mini-note">Use * for hydrates: CuSO₄*5H₂O</div>
+      <button class="action-btn primary" onclick="PercentComposition.calculate()" style="margin-top:10px;">
+        📊 Calculate % Composition
+      </button>
+      <button class="action-btn" onclick="PercentComposition.clear()">Clear</button>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">QUICK EXAMPLES</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <button class="style-btn" onclick="PercentComposition.loadExample('H2O')">H₂O — Water</button>
+        <button class="style-btn" onclick="PercentComposition.loadExample('CO2')">CO₂ — Carbon Dioxide</button>
+        <button class="style-btn" onclick="PercentComposition.loadExample('Fe2O3')">Fe₂O₃ — Iron(III) Oxide</button>
+        <button class="style-btn" onclick="PercentComposition.loadExample('C6H12O6')">C₆H₁₂O₆ — Glucose</button>
+        <button class="style-btn" onclick="PercentComposition.loadExample('Ca3(PO4)2')">Ca₃(PO₄)₂ — Calcium Phosphate</button>
+        <button class="style-btn" onclick="PercentComposition.loadExample('(NH4)2SO4')">(NH₄)₂SO₄ — Ammonium Sulfate</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">ABOUT</div>
+      <div class="mini-note">
+        Percent composition tells you the percentage by mass of each element in a compound.<br><br>
+        <strong>Formula:</strong><br>
+        % = (mass of element / molar mass) × 100
+      </div>
+    </div>
+
+  </aside>
+
+  <div class="preview-panel">
+    <div class="preview-label">Results — percent composition by mass</div>
+    <div class="results-scroll-wrapper">
+      <div class="results-sheet" id="pc-results">
+        <div class="placeholder-msg">📊 Enter a chemical formula and click <strong>Calculate % Composition</strong>.</div>
+      </div>
+    </div>
+  </div>
+</div>
   </section>
 
   <section id="tab-percent-yield" class="tab-panel">
-    <div id="percent-yield-container"></div>
+<div class="panel-layout">
+  <aside class="controls-panel">
+
+    <div class="control-group">
+      <div class="group-title">CALCULATION MODE</div>
+      <label>Solve For</label>
+      <div class="btn-group" style="margin-top:4px;">
+        <button class="style-btn active" id="py-mode-yield"    onclick="PercentYield.setMode('yield')">% Yield</button>
+        <button class="style-btn" id="py-mode-actual"   onclick="PercentYield.setMode('actual')">Actual Yield</button>
+        <button class="style-btn" id="py-mode-theoretical" onclick="PercentYield.setMode('theoretical')">Theoretical Yield</button>
+      </div>
+    </div>
+
+    <div class="control-group" id="py-fields">
+      <!-- Dynamically built based on mode -->
+    </div>
+
+    <button class="action-btn primary" onclick="PercentYield.calculate()" style="margin-top:4px;">📈 Calculate</button>
+    <button class="action-btn" onclick="PercentYield.clear()">Clear</button>
+
+    <div class="control-group">
+      <div class="group-title">ABOUT</div>
+      <div class="mini-note">
+        <strong>% Yield = (Actual / Theoretical) × 100</strong><br><br>
+        • <strong>Theoretical yield</strong> — maximum amount possible based on stoichiometry<br>
+        • <strong>Actual yield</strong> — amount actually collected from the experiment<br>
+        • <strong>% Yield</strong> — how efficient the reaction was<br><br>
+        Enter any two values and solve for the third.
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">QUICK EXAMPLES</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <button class="style-btn" onclick="PercentYield.loadExample('ex1')">Actual=4.6g, Theoretical=5.0g</button>
+        <button class="style-btn" onclick="PercentYield.loadExample('ex2')">% Yield=85%, Theoretical=12.0g</button>
+        <button class="style-btn" onclick="PercentYield.loadExample('ex3')">Actual=9.8g, % Yield=72%</button>
+      </div>
+    </div>
+
+  </aside>
+
+  <div class="preview-panel">
+    <div class="preview-label">Results — percent yield calculation</div>
+    <div class="results-scroll-wrapper">
+      <div class="results-sheet" id="py-results">
+        <div class="placeholder-msg">📈 Select what to solve for, enter two known values, and click <strong>Calculate</strong>.</div>
+      </div>
+    </div>
+  </div>
+</div>
   </section>
 
   <section id="tab-empirical-molecular" class="tab-panel">
-    <div id="empirical-molecular-container"></div>
+<div class="panel-layout">
+  <aside class="controls-panel">
+
+    <div class="control-group">
+      <div class="group-title">INPUT MODE</div>
+      <div class="btn-group">
+        <button class="style-btn active" id="em-mode-pct"  onclick="EmpiricalMolecular.setMode('percent')">% by Mass</button>
+        <button class="style-btn" id="em-mode-mass" onclick="EmpiricalMolecular.setMode('mass')">Actual Mass (g)</button>
+      </div>
+      <div class="mini-note" id="em-mode-note" style="margin-top:6px;">
+        Enter the percent by mass of each element. Values should add up to ~100%.
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">ELEMENT DATA</div>
+      <div style="display:grid;grid-template-columns:60px 1fr 28px;gap:4px;margin-bottom:4px;">
+        <span style="font-size:10px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Element</span>
+        <span style="font-size:10px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;" id="em-col-header">% by Mass</span>
+        <span></span>
+      </div>
+      <div id="em-element-rows"></div>
+      <button class="action-btn" onclick="EmpiricalMolecular.addRow()">＋ Add Element</button>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">MOLECULAR FORMULA (optional)</div>
+      <div class="mini-note" style="margin-bottom:6px;">If you know the molar mass of the compound, enter it to also find the molecular formula.</div>
+      <label>Molar Mass of Compound (g/mol)</label>
+      <input type="number" id="em-molar-mass" placeholder="e.g. 180" min="0" step="0.001" />
+      <div class="mini-note">Leave blank to calculate empirical formula only.</div>
+    </div>
+
+    <button class="action-btn primary" onclick="EmpiricalMolecular.calculate()">🔬 Calculate</button>
+    <button class="action-btn" onclick="EmpiricalMolecular.clear()">Clear</button>
+
+    <div class="control-group">
+      <div class="group-title">QUICK EXAMPLES</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <button class="style-btn" onclick="EmpiricalMolecular.loadExample('water')">H₂O from % mass</button>
+        <button class="style-btn" onclick="EmpiricalMolecular.loadExample('glucose')">Glucose (C₆H₁₂O₆)</button>
+        <button class="style-btn" onclick="EmpiricalMolecular.loadExample('empirical')">CH₂ (empirical only)</button>
+        <button class="style-btn" onclick="EmpiricalMolecular.loadExample('feo')">Iron Oxide</button>
+      </div>
+    </div>
+
+  </aside>
+
+  <div class="preview-panel">
+    <div class="preview-label">Results — empirical and molecular formula from composition data</div>
+    <div class="results-scroll-wrapper">
+      <div class="results-sheet" id="em-results">
+        <div class="placeholder-msg">🔬 Enter element data and click <strong>Calculate</strong> to find the empirical formula.</div>
+      </div>
+    </div>
+  </div>
+</div>
   </section>
 
 </main>
 
-<!-- Styled alert container -->
-
 <div id="alert-container"></div>
 
 <script src="formula-parser.js"></script>
-
 <script src="app.js"></script>
-
 <script src="molar-mass.js"></script>
-
 <script src="equation-balancer.js"></script>
-
 <script src="redox-engine.js"></script>
-
 <script src="redox-balancer.js"></script>
-
 <script src="stoichiometry.js"></script>
-
 <script src="percent-composition.js"></script>
-
 <script src="percent-yield.js"></script>
-
 <script src="empirical-molecular.js"></script>
 
 </body>
