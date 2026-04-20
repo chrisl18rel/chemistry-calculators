@@ -419,7 +419,7 @@ const Stoichiometry = (() => {
     rSection.style.display = '';
 
     // Pass product theoretical yields to % yield section
-    populatePyFromResults(productResults, dp);
+    populatePyFromResults(products, dp);
   }
   function buildResultsTable(results, dp) {
     const reactants = results.filter(c => c.role === 'reactant');
