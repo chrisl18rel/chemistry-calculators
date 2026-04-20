@@ -276,9 +276,29 @@ function extractIonCharge(s) {
   if (curlyMatch) {
     const formula = curlyMatch[1].trim();
     const chargeStr = curlyMatch[2].trim();
-    const m1 = chargeStr.match(/^(\d+)([+\-])$/);  // "2-", "3+"
-    const m2 = chargeStr.match(/^([+\-])(\d+)$/);  // "+2", "-1"
-    const m3 = chargeStr.match(/^([+\-])$/);         // "+", "-"
+    const m1 = chargeStr.match(/^(\d+)([+\-])$/);  // "2-", "3+"  magnitude-sign
+    const m2 = chargeStr.match(/^([+\-])(\d+)$/);  // "+2", "-1"  sign-magnitude
+    const m3 = chargeStr.match(/^([+\-])$/);        // "+", "-"    bare sign
+
+    // ── Ambiguity check ──
+    // If the charge is written as magnitude-sign with a NEGATIVE sign (e.g. {3-}),
+    // AND the formula is a single element, the user may have intended the digit as
+    // a subscript (e.g. I{3-} meaning I₃ with charge -1, not I with charge -3).
+    // This ambiguity only applies to anions — Fe{2+} is unambiguous (Fe²⁺).
+    if (m1 && m1[2] === '-') {
+      const mag = parseInt(m1[1]);
+      const isSingleElement = /^[A-Z][a-z]?$/.test(formula);
+      if (isSingleElement && mag > 1) {
+        // e.g. I{3-} — almost certainly meant I3{-1}
+        const suggested = `${formula}${mag}{-1}`;
+        throw new Error(
+          `Ambiguous notation: "${formula}{${mag}-}" — did you mean the ${mag} is a subscript in the formula?\n` +
+          `If so, write it as: ${suggested}\n` +
+          `Example: I3{-1} for triiodide (I₃⁻), not I{3-}`
+        );
+      }
+    }
+
     let charge = 0;
     if      (m1) charge = (m1[2] === '+' ? +1 : -1) * parseInt(m1[1]);
     else if (m2) charge = (m2[1] === '+' ? +1 : -1) * parseInt(m2[2]);
