@@ -695,7 +695,8 @@ function speciesToString(species) {
   return species.map(s => {
     const coeff = s.coeff > 1 ? s.coeff : '';
     const charge = s.charge ? formatCharge(s.charge) : '';
-    return `${coeff}${s.formula}${charge ? `^${charge}` : ''}`;
+    const formula = formulaToHTML(s.formula);
+    return `${coeff}${formula}${charge ? `<sup>${charge}</sup>` : ''}`;
   }).join(' + ');
 }
 
