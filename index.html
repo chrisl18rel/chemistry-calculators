@@ -17,7 +17,7 @@
       <p>Molar mass · Equation balancing · Stoichiometry · Composition · Yield · Empirical formula</p>
     </div>
   </div>
-  <div class="app-version">v5.2</div>
+  <div class="app-version">v5.3</div>
 </header>
 
 <nav class="tab-nav">
@@ -543,6 +543,8 @@
         <button class="style-btn"        id="ph-mode-weak-acid"    onclick="PhCalculator.setMode('weak-acid')">Weak Acid</button>
         <button class="style-btn"        id="ph-mode-weak-base"    onclick="PhCalculator.setMode('weak-base')">Weak Base</button>
         <button class="style-btn"        id="ph-mode-buffer"       onclick="PhCalculator.setMode('buffer')">Buffer Solution</button>
+        <button class="style-btn"        id="ph-mode-buffer-addition" onclick="PhCalculator.setMode('buffer-addition')">Buffer + Acid/Base Addition</button>
+        <button class="style-btn"        id="ph-mode-polyprotic"   onclick="PhCalculator.setMode('polyprotic')">Polyprotic Acid/Buffer</button>
         <button class="style-btn"        id="ph-mode-titration"    onclick="PhCalculator.setMode('titration')">Titration Curve</button>
       </div>
     </div>
@@ -597,6 +599,7 @@
 <script src="percent-yield.js"></script>
 <script src="empirical-molecular.js"></script>
 <script src="color-picker.js"></script>
+<script src="polyprotic.js"></script>
 <script src="ph-calculator.js"></script>
 
 </body>
