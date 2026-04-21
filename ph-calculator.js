@@ -101,6 +101,8 @@ const PhCalculator = (() => {
       'titration':   titrationInputs,
     };
     c.innerHTML = (templates[currentMode] || (() => ''))();
+    // Populate dynamic sub-fields for buffer mode
+    if (currentMode === 'buffer') bufferModeSwitch();
   }
 
   function smartInputs() {
@@ -177,11 +179,12 @@ const PhCalculator = (() => {
     </div>`;
   }
 
-  function selectField(id, label, options) {
+  function selectField(id, label, options, onchange='') {
     const opts = options.map(([v,t]) => `<option value="${v}">${t}</option>`).join('');
     return `<div style="margin-bottom:10px;">
       <label class="stoi-lbl">${label}</label>
-      <select id="${id}" class="stoi-select" style="width:100%;min-width:unset;background:#fff;color:#111;">
+      <select id="${id}" class="stoi-select" style="width:100%;min-width:unset;background:#fff;color:#111;"
+        ${onchange ? `onchange="${onchange}"` : ''}>
         ${opts}
       </select>
     </div>`;
@@ -215,20 +218,43 @@ const PhCalculator = (() => {
 
   function bufferInputs() {
     return `
-      ${selectField('ph-buf-type', 'Buffer Type', [['acid','Weak Acid + Conjugate Base'],['base','Weak Base + Conjugate Acid']])}
-      ${selectField('ph-buf-input', 'Enter amounts as', [['conc','Concentrations (mol/L)'],['moles','Moles']])}
-      <div id="ph-buf-acid-label" style="margin-bottom:10px;">
-        <label class="stoi-lbl">Weak Acid [HA] amount</label>
-        <input type="number" id="ph-buf-acid" min="0" step="any" placeholder="e.g. 0.200"
-          class="stoi-num-input" style="width:100%;box-sizing:border-box;" />
-      </div>
-      <div id="ph-buf-base-label" style="margin-bottom:10px;">
-        <label class="stoi-lbl">Conjugate Base [A⁻] amount</label>
-        <input type="number" id="ph-buf-base" min="0" step="any" placeholder="e.g. 0.100"
-          class="stoi-num-input" style="width:100%;box-sizing:border-box;" />
-      </div>
-      ${selectField('ph-buf-ktype', 'Equilibrium Constant Provided', [['Ka','Ka'],['Kb','Kb (converts to Ka)'],['pKa','pKa']])}
-      ${numField('ph-buf-kval', 'Value', 'e.g. 1.8e-5 or 4.74')}`;
+      ${selectField('ph-buf-solve', 'What do you want to find?', [
+        ['pH',   'Find pH (know amounts + Ka/pKa)'],
+        ['ratio','Find ratio [A⁻]/[HA] (know pH + Ka/pKa)'],
+      ], 'PhCalculator.bufferModeSwitch()')}
+      <div id="ph-buf-mode-fields"></div>`;
+  }
+
+  function bufferModeSwitch() {
+    const solve = document.getElementById('ph-buf-solve')?.value;
+    const container = document.getElementById('ph-buf-mode-fields');
+    if (!container) return;
+
+    if (solve === 'ratio') {
+      container.innerHTML = `
+        <div class="display-divider"></div>
+        ${selectField('ph-buf-type', 'Buffer Type', [['acid','Weak Acid + Conjugate Base'],['base','Weak Base + Conjugate Acid']])}
+        ${numField('ph-buf-target-ph', 'Target pH', 'e.g. 4.50')}
+        ${selectField('ph-buf-ktype', 'Equilibrium Constant Provided', [['pKa','pKa'],['Ka','Ka'],['Kb','Kb (converts to Ka)']])}
+        ${numField('ph-buf-kval', 'Value', 'e.g. 3.39 or 1.8e-5')}`;
+    } else {
+      container.innerHTML = `
+        <div class="display-divider"></div>
+        ${selectField('ph-buf-type', 'Buffer Type', [['acid','Weak Acid + Conjugate Base'],['base','Weak Base + Conjugate Acid']])}
+        ${selectField('ph-buf-input', 'Enter amounts as', [['conc','Concentrations (mol/L)'],['moles','Moles']])}
+        <div style="margin-bottom:10px;">
+          <label class="stoi-lbl">Weak Acid [HA] amount</label>
+          <input type="number" id="ph-buf-acid" min="0" step="any" placeholder="e.g. 0.200"
+            class="stoi-num-input" style="width:100%;box-sizing:border-box;" />
+        </div>
+        <div style="margin-bottom:10px;">
+          <label class="stoi-lbl">Conjugate Base [A⁻] amount</label>
+          <input type="number" id="ph-buf-base" min="0" step="any" placeholder="e.g. 0.100"
+            class="stoi-num-input" style="width:100%;box-sizing:border-box;" />
+        </div>
+        ${selectField('ph-buf-ktype', 'Equilibrium Constant Provided', [['Ka','Ka'],['Kb','Kb (converts to Ka)'],['pKa','pKa']])}
+        ${numField('ph-buf-kval', 'Value', 'e.g. 1.8e-5 or 4.74')}`;
+    }
   }
 
   function titrationInputs() {
@@ -894,6 +920,9 @@ const PhCalculator = (() => {
 
   // ── BUFFER ──
   function calcBuffer() {
+    const solve = document.getElementById('ph-buf-solve')?.value || 'pH';
+    if (solve === 'ratio') { calcBufferRatio(); return; }
+
     const bufType   = document.getElementById('ph-buf-type')?.value;
     const inputType = document.getElementById('ph-buf-input')?.value;
     const acidAmt   = requirePositive(parseFloat(document.getElementById('ph-buf-acid')?.value), 'Acid amount');
@@ -925,9 +954,6 @@ const PhCalculator = (() => {
     const pOH = 14 - pH;
     const h3o = Math.pow(10, -pH);
     const oh  = Math.pow(10, -pOH);
-    const amtLabel = inputType === 'moles' ? 'mol' : 'mol/L';
-    const acidLabel = bufType === 'acid' ? '[HA]' : '[BH⁺]';
-    const baseLabel = bufType === 'acid' ? '[A⁻]' : '[B]';
 
     const steps = [
       stepLine(1, 'Identify as a <strong>buffer solution</strong>. Henderson–Hasselbalch equation applies.'),
@@ -949,6 +975,114 @@ const PhCalculator = (() => {
     ].join('');
 
     renderResults('Buffer Solution', makeResultsBox(pH, pOH, h3o, oh, Ka, Kb), steps);
+  }
+
+  // ── BUFFER: SOLVE FOR RATIO ──
+  function calcBufferRatio() {
+    const bufType = document.getElementById('ph-buf-type')?.value;
+    const targetPH = requirePositive(parseFloat(document.getElementById('ph-buf-target-ph')?.value), 'Target pH');
+    if (targetPH > 14 || targetPH < 0) throw new Error('pH must be between 0 and 14.');
+    const ktype = document.getElementById('ph-buf-ktype')?.value;
+    const kval  = requirePositive(parseFloat(document.getElementById('ph-buf-kval')?.value), 'Equilibrium constant value');
+
+    let Ka, pKa, convStep = '';
+    if (ktype === 'pKa') {
+      pKa = kval;
+      Ka  = Math.pow(10, -pKa);
+      convStep = stepLine(2, `pKa given directly: <strong>pKa = ${fmt2(pKa)}</strong>`);
+    } else if (ktype === 'Ka') {
+      Ka  = kval;
+      pKa = -Math.log10(Ka);
+      convStep = stepLine(2, `Ka given: Ka = ${Ka.toExponential(4)}<br>
+        Convert to pKa: pKa = −log(${Ka.toExponential(4)}) = <strong>${fmt2(pKa)}</strong>`);
+    } else {
+      Ka  = Kw / kval;
+      pKa = -Math.log10(Ka);
+      convStep = stepLine(2, `Kb given. Convert to Ka: Ka = Kw / Kb = ${Ka.toExponential(4)}<br>
+        Convert to pKa: pKa = −log(${Ka.toExponential(4)}) = <strong>${fmt2(pKa)}</strong>`);
+    }
+
+    const Kb  = Kw / Ka;
+    const pKb = -Math.log10(Kb);
+
+    // Henderson–Hasselbalch rearranged:
+    // pH = pKa + log([A⁻]/[HA])
+    // log([A⁻]/[HA]) = pH − pKa
+    // [A⁻]/[HA] = 10^(pH − pKa)
+    const logRatio = targetPH - pKa;
+    const ratio    = Math.pow(10, logRatio);
+
+    // Express as a clean ratio  e.g. "2.34 : 1" or "1 : 0.43"
+    let ratioStr;
+    if (ratio >= 1) {
+      ratioStr = `${fmt4(ratio)} : 1 &nbsp;(or ${fmt4(ratio)} mol A⁻ per mol HA)`;
+    } else {
+      ratioStr = `1 : ${fmt4(1/ratio)} &nbsp;(or 1 mol A⁻ per ${fmt4(1/ratio)} mol HA)`;
+    }
+
+    const acidLabel = bufType === 'acid' ? '[A⁻] / [HA]' : '[B] / [BH⁺]';
+    const pOH = 14 - targetPH;
+    const h3o = Math.pow(10, -targetPH);
+    const oh  = Math.pow(10, -pOH);
+
+    const steps = [
+      stepLine(1, `We need to find the ratio <strong>${acidLabel}</strong> that produces a buffer at <strong>pH = ${fmt2(targetPH)}</strong>.`),
+      convStep,
+      stepLine(3, 'Write the Henderson–Hasselbalch equation:'),
+      eq(`pH = pKa + log([A⁻] / [HA])`),
+      stepLine(4, 'Rearrange to isolate the log term — subtract pKa from both sides:'),
+      eq(`log([A⁻] / [HA]) = pH − pKa`),
+      stepLine(5, 'Substitute the known values:'),
+      eq(`log([A⁻] / [HA]) = ${fmt2(targetPH)} − ${fmt2(pKa)}`),
+      eq(`log([A⁻] / [HA]) = ${fmt2(logRatio)}`),
+      stepLine(6, 'Solve for the ratio — raise both sides as a power of 10:'),
+      eq(`[A⁻] / [HA] = 10<sup>${fmt2(logRatio)}</sup>`),
+      eq(`[A⁻] / [HA] = <strong>${fmt4(ratio)}</strong>`),
+      stepLine(7, 'Interpret the result:'),
+      `<div style="background:#e8f5e9;border:1px solid #4caf50;border-radius:6px;padding:12px 14px;
+        margin:4px 0 8px 28px;">
+        <div style="font-size:13px;font-weight:700;color:#1a2a4a;margin-bottom:6px;">
+          Ratio [A⁻]:[HA] = ${ratioStr}
+        </div>
+        <div style="font-size:12px;color:#2e7d32;line-height:1.6;">
+          To prepare this buffer, use ${fmt4(ratio)} times as many moles (or mol/L) of
+          <strong>conjugate base</strong> as <strong>weak acid</strong>.
+          Any combination that preserves this ratio will give pH = ${fmt2(targetPH)}.
+        </div>
+      </div>`,
+      ratio >= 0.1 && ratio <= 10
+        ? note('✓ This ratio is within the reliable buffer range (0.1–10). Henderson–Hasselbalch is valid here.', '#2e7d32')
+        : note(`⚠ This ratio (${fmt4(ratio)}) is outside the optimal buffer range (0.1–10). At this ratio the buffer has very limited capacity to resist pH changes.`, '#b71c1c'),
+      stepLine(8, 'Calculate the remaining solution properties at this pH:'),
+      eq(`pOH = 14.00 − ${fmt2(targetPH)} = ${fmt2(pOH)}`),
+      eq(`[H₃O⁺] = 10<sup>−${fmt2(targetPH)}</sup> = ${sci(h3o)} M`),
+      eq(`[OH⁻]  = 10<sup>−${fmt2(pOH)}</sup> = ${sci(oh)} M`),
+    ].join('');
+
+    // Custom result box with ratio prominently displayed
+    const el = document.getElementById('ph-results');
+    el.innerHTML = `
+      <h2 style="margin-bottom:4px;font-size:18px;color:#1a2a4a;">🧮 Buffer — Solve for Ratio</h2>
+      <div style="font-size:12px;color:#555;margin-bottom:12px;">
+        Target pH = ${fmt2(targetPH)} &nbsp;·&nbsp; pKa = ${fmt2(pKa)}
+      </div>
+
+      <div style="background:#e8f5e9;border:2px solid #4caf50;border-radius:8px;
+        padding:14px 16px;margin-bottom:14px;text-align:center;">
+        <div style="font-size:11px;color:#555;font-weight:700;text-transform:uppercase;
+          letter-spacing:0.5px;margin-bottom:4px;">[A⁻] / [HA] Ratio</div>
+        <div style="font-size:28px;font-weight:700;color:#1a2a4a;">${fmt4(ratio)}</div>
+        <div style="font-size:12px;color:#2e7d32;margin-top:4px;">
+          ${ratio >= 1
+            ? `${fmt4(ratio)} mol conjugate base per 1 mol weak acid`
+            : `1 mol conjugate base per ${fmt4(1/ratio)} mol weak acid`}
+        </div>
+      </div>
+
+      ${makeResultsBox(targetPH, pOH, h3o, oh, Ka, Kb)}
+      <div class="results-section-title">Step-by-Step Solution</div>
+      <div style="background:#f8f9ff;border:1px solid #dde3f0;border-radius:6px;padding:14px;
+        line-height:1.8;font-size:13px;">${steps}</div>`;
   }
 
   // ── TITRATION CURVE ──
@@ -1340,7 +1474,7 @@ const PhCalculator = (() => {
     buildInputs();
   }
 
-  return { init, setMode, calculate, clearAll, exportCurve, smartDetect, smartUpdateFields, smartOverrideChanged };
+  return { init, setMode, calculate, clearAll, exportCurve, smartDetect, smartUpdateFields, smartOverrideChanged, bufferModeSwitch };
 })();
 
 window.addEventListener('load', () => PhCalculator.init());
