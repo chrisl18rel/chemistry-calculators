@@ -473,9 +473,9 @@ const PhCalculator = (() => {
           <input type="number" id="ph-tit-title-size" value="14" min="8" max="32"
             class="stoi-num-input" style="width:100%;box-sizing:border-box;" oninput="PhCalculator.updateTitStyle()" /></div>
         <div><label class="stoi-lbl">Color</label>
-          <input type="color" id="ph-tit-title-color" value="#1a2a4a"
-            style="width:100%;height:32px;border:1px solid #c8d5ee;border-radius:5px;cursor:pointer;"
-            oninput="PhCalculator.updateTitStyle()" /></div>
+          <button id="ph-tit-title-color" class="color-swatch-btn"
+            style="background:#1a2a4a;width:100%;height:32px;border-radius:4px;"
+            onclick="openColorPicker(this,this.style.background,c=>{this.style.background=c;PhCalculator.updateTitStyle();})"></button></div>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
         <label class="stoi-radio" style="font-size:12px;">
@@ -495,9 +495,9 @@ const PhCalculator = (() => {
           <input type="number" id="ph-tit-lbl-size" value="10" min="7" max="18"
             class="stoi-num-input" style="width:100%;box-sizing:border-box;" oninput="PhCalculator.updateTitStyle()" /></div>
         <div><label class="stoi-lbl">Color</label>
-          <input type="color" id="ph-tit-lbl-color" value="#1a2a4a"
-            style="width:100%;height:32px;border:1px solid #c8d5ee;border-radius:5px;cursor:pointer;"
-            oninput="PhCalculator.updateTitStyle()" /></div>
+          <button id="ph-tit-lbl-color" class="color-swatch-btn"
+            style="background:#1a2a4a;width:100%;height:32px;border-radius:4px;"
+            onclick="openColorPicker(this,this.style.background,c=>{this.style.background=c;PhCalculator.updateTitStyle();})"></button></div>
       </div>
       <div style="margin-bottom:8px;">
         <label class="stoi-radio" style="font-size:12px;">
@@ -508,21 +508,21 @@ const PhCalculator = (() => {
       <div class="mini-note" style="font-weight:700;color:var(--text);margin-bottom:6px;">LINE COLORS</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px;">
         <div><label class="stoi-lbl">Equiv.</label>
-          <input type="color" id="ph-tit-equiv-color" value="#f39c12"
-            style="width:100%;height:28px;border:1px solid #c8d5ee;border-radius:5px;cursor:pointer;"
-            oninput="PhCalculator.updateTitStyle()" /></div>
+          <button id="ph-tit-equiv-color" class="color-swatch-btn"
+            style="background:#f39c12;width:100%;height:28px;border-radius:4px;"
+            onclick="openColorPicker(this,this.style.background,c=>{this.style.background=c;PhCalculator.updateTitStyle();})"></button></div>
         <div><label class="stoi-lbl">½-Equiv.</label>
-          <input type="color" id="ph-tit-half-color" value="#e94560"
-            style="width:100%;height:28px;border:1px solid #c8d5ee;border-radius:5px;cursor:pointer;"
-            oninput="PhCalculator.updateTitStyle()" /></div>
+          <button id="ph-tit-half-color" class="color-swatch-btn"
+            style="background:#e94560;width:100%;height:28px;border-radius:4px;"
+            onclick="openColorPicker(this,this.style.background,c=>{this.style.background=c;PhCalculator.updateTitStyle();})"></button></div>
         <div><label class="stoi-lbl">pKa line</label>
-          <input type="color" id="ph-tit-pka-color" value="#2ecc71"
-            style="width:100%;height:28px;border:1px solid #c8d5ee;border-radius:5px;cursor:pointer;"
-            oninput="PhCalculator.updateTitStyle()" /></div>
+          <button id="ph-tit-pka-color" class="color-swatch-btn"
+            style="background:#2ecc71;width:100%;height:28px;border-radius:4px;"
+            onclick="openColorPicker(this,this.style.background,c=>{this.style.background=c;PhCalculator.updateTitStyle();})"></button></div>
         <div><label class="stoi-lbl">Buffer Fill</label>
-          <input type="color" id="ph-tit-buf-color" value="#4caf50"
-            style="width:100%;height:28px;border:1px solid #c8d5ee;border-radius:5px;cursor:pointer;"
-            oninput="PhCalculator.updateTitStyle()" /></div>
+          <button id="ph-tit-buf-color" class="color-swatch-btn"
+            style="background:#4caf50;width:100%;height:28px;border-radius:4px;"
+            onclick="openColorPicker(this,this.style.background,c=>{this.style.background=c;PhCalculator.updateTitStyle();})"></button></div>
       </div>
       <div class="display-divider"></div>
       <div class="mini-note" style="font-weight:700;color:var(--text);margin-bottom:6px;">SHOW/HIDE ON GRAPH</div>
@@ -553,13 +553,15 @@ const PhCalculator = (() => {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
         <div>
           <label class="stoi-lbl">Dot color</label>
-          <input type="color" id="ph-def-dot-color" value="#e94560"
-            style="width:100%;height:28px;border:1px solid #c8d5ee;border-radius:5px;cursor:pointer;" />
+          <button id="ph-def-dot-color" class="color-swatch-btn"
+            style="background:#e94560;width:100%;height:28px;border-radius:4px;"
+            onclick="openColorPicker(this,this.style.background,c=>{this.style.background=c;})"></button>
         </div>
         <div>
           <label class="stoi-lbl">Line color</label>
-          <input type="color" id="ph-def-line-color" value="#555555"
-            style="width:100%;height:28px;border:1px solid #c8d5ee;border-radius:5px;cursor:pointer;" />
+          <button id="ph-def-line-color" class="color-swatch-btn"
+            style="background:#555555;width:100%;height:28px;border-radius:4px;"
+            onclick="openColorPicker(this,this.style.background,c=>{this.style.background=c;})"></button>
         </div>
       </div>
       <label class="stoi-lbl">Dotted line thickness</label>
@@ -1724,8 +1726,8 @@ const PhCalculator = (() => {
       showCoord:   g('ph-def-coord')   ? g('ph-def-coord').checked   : true,
       showDotted:  g('ph-def-dotted')  ? g('ph-def-dotted').checked  : true,
       snapToLine:  g('ph-def-snap')    ? g('ph-def-snap').checked    : false,
-      dotColor:    g('ph-def-dot-color')  ? g('ph-def-dot-color').value  : '#e94560',
-      lineColor:   g('ph-def-line-color') ? g('ph-def-line-color').value : '#555555',
+      dotColor:    g('ph-def-dot-color')  ? (s => s.startsWith('#') ? s : '#' + (s.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/) || [0,'0','0','0']).slice(1).map(n=>parseInt(n).toString(16).padStart(2,'0')).join(''))(g('ph-def-dot-color').style.background) : '#e94560',
+      lineColor:   g('ph-def-line-color') ? (s => s.startsWith('#') ? s : '#' + (s.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/) || [0,'0','0','0']).slice(1).map(n=>parseInt(n).toString(16).padStart(2,'0')).join(''))(g('ph-def-line-color').style.background) : '#555555',
       lineThick:   g('ph-def-thick-num')  ? parseFloat(g('ph-def-thick-num').value) || 1 : 1,
       labelOff:    null,
     };
@@ -1808,18 +1810,61 @@ const PhCalculator = (() => {
       if (Math.hypot(mx-px, my-py) <= 10) return { kind: 'userDot', idx: i };
     }
 
-    // 3. Reference labels
-    const refR = 20;
-    const refs = [
-      { key: 'equiv', cx: labelPos.equiv ? labelPos.equiv.x : xs(Veq)+3, cy: labelPos.equiv ? labelPos.equiv.y : PAD.top+14 },
+    // 3. Reference labels — hit boxes match exact rendered text positions
+    const fs = style.labelSize || 10;
+    // Each entry: key, anchor x, anchor y (= text baseline y as drawn), estimated text width chars, textAlign
+    const refLabels = [
+      {
+        key: 'equiv',
+        lx: labelPos.equiv ? labelPos.equiv.x : xs(Veq)+3,
+        ly: labelPos.equiv ? labelPos.equiv.y : PAD.top+14,
+        txt: `Equiv. (${Veq.toFixed(1)} mL)`,
+        align: 'left',
+      },
     ];
     if (isWeak) {
-      refs.push({ key: 'halfEquiv', cx: labelPos.halfEquiv ? labelPos.halfEquiv.x : xs(Vmid)+3, cy: labelPos.halfEquiv ? labelPos.halfEquiv.y : PAD.top+28 });
-      refs.push({ key: 'buffer', cx: labelPos.buffer ? labelPos.buffer.x : xs(Vmid/2), cy: labelPos.buffer ? labelPos.buffer.y : canvas.height-PAD.bottom-10 });
-      if (pKa !== null) refs.push({ key: 'pka', cx: labelPos.pka ? labelPos.pka.x : canvas.width-PAD.right-50, cy: labelPos.pka ? labelPos.pka.y : ys(pKa)-6 });
+      refLabels.push({
+        key: 'halfEquiv',
+        lx: labelPos.halfEquiv ? labelPos.halfEquiv.x : xs(Vmid)+3,
+        ly: labelPos.halfEquiv ? labelPos.halfEquiv.y : PAD.top+28,
+        txt: `½-equiv. (${Vmid.toFixed(1)} mL)`,
+        align: 'left',
+      });
+      refLabels.push({
+        key: 'buffer',
+        lx: labelPos.buffer ? labelPos.buffer.x : xs(Vmid/2),
+        ly: labelPos.buffer ? labelPos.buffer.y : canvas.height-PAD.bottom-10,
+        txt: 'Buffer Region',
+        align: 'center',
+      });
+      if (pKa !== null) refLabels.push({
+        key: 'pka',
+        lx: labelPos.pka ? labelPos.pka.x : PAD.left + (canvas.width - PAD.left - PAD.right) - 4,
+        ly: labelPos.pka ? labelPos.pka.y : ys(pKa)-4,
+        txt: `pKa = ${pKa.toFixed(2)}`,
+        align: 'right',
+      });
     }
-    for (const r of refs) {
-      if (Math.abs(mx-r.cx) < refR && Math.abs(my-r.cy) < 14) return { kind: 'refLabel', key: r.key, offX: mx-r.cx, offY: my-r.cy };
+    const pad = 4; // extra padding around text for easier grabbing
+    for (const r of refLabels) {
+      const tw = r.txt.length * fs * 0.6; // estimated text width
+      let x0, x1;
+      if (r.align === 'left') {
+        x0 = r.lx - pad;
+        x1 = r.lx + tw + pad;
+      } else if (r.align === 'right') {
+        x0 = r.lx - tw - pad;
+        x1 = r.lx + pad;
+      } else { // center
+        x0 = r.lx - tw/2 - pad;
+        x1 = r.lx + tw/2 + pad;
+      }
+      // Text baseline is r.ly; text renders upward by ~fs pixels
+      const y0 = r.ly - fs - pad;
+      const y1 = r.ly + pad;
+      if (mx >= x0 && mx <= x1 && my >= y0 && my <= y1) {
+        return { kind: 'refLabel', key: r.key, offX: mx - r.lx, offY: my - r.ly };
+      }
     }
     return null;
   }
@@ -2366,7 +2411,14 @@ const PhCalculator = (() => {
     if (!_tit) return;
     const s = _tit.style;
     const g = id => document.getElementById(id);
-    const v = id => { const el = g(id); return el ? el.value : null; };
+    const normColor = c => {
+      if (!c) return null;
+      if (c.startsWith('#')) return c;
+      const m = c.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+      if (m) return '#' + [m[1],m[2],m[3]].map(n => parseInt(n).toString(16).padStart(2,'0')).join('');
+      return c;
+    };
+    const v = id => { const el = g(id); return el ? (el.tagName === 'BUTTON' ? normColor(el.style.background) : el.value) : null; };
     const c = id => { const el = g(id); return el ? el.checked : true; };
 
     s.titleText  = v('ph-tit-title') || '';
