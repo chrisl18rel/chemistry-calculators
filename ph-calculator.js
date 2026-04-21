@@ -380,7 +380,7 @@ const PhCalculator = (() => {
       </div>
       <button class="action-btn primary" onclick="PhCalculator.addPointManual()" style="width:100%;margin-bottom:8px;">＋ Add Point</button>
       <div class="display-divider"></div>
-      <div id="ph-user-points-list">
+      <div class="points-list" id="ph-user-points-list">
         <div style="font-size:11px;color:var(--text-dim);padding:4px 0;">Click the graph to add points.</div>
       </div>
       <button class="action-btn" onclick="PhCalculator.clearUserPoints()" style="font-size:11px;padding:5px 10px;margin-top:6px;width:100%;">🗑 Clear All Points</button>`;
@@ -1734,13 +1734,6 @@ const PhCalculator = (() => {
           <label class="point-toggle"><input type="checkbox" class="pt-coord"  ${up.showCoord ?'checked':''} /> Show ordered pair label</label>
           <label class="point-toggle"><input type="checkbox" class="pt-snap"   ${up.snapToLine?'checked':''} /> Snap to curve line</label>
         </div>
-        <div style="margin-bottom:6px;">
-          <label class="stoi-lbl" style="display:block;margin-bottom:3px;">Point label</label>
-          <input type="text" class="pt-letter" value="${up.customLetter||''}" placeholder="${letter} (default)"
-            class="stoi-num-input" style="width:100%;box-sizing:border-box;background:var(--bg);
-              border:1px solid var(--border2);border-radius:4px;color:var(--text);
-              font-size:12px;padding:5px 8px;outline:none;" />
-        </div>
         <div class="point-color-row">
           <label>Dot</label>
           <button class="color-swatch-btn pt-dot-sw" style="background:${up.dotColor||'#e94560'};width:22px;height:22px;"></button>
@@ -1751,6 +1744,11 @@ const PhCalculator = (() => {
           <label>Thickness</label>
           <input type="range" class="pt-thick-r" min="0.5" max="4" step="0.5" value="${up.lineThick||1}" />
           <input type="number" class="pt-thick-n" min="0.5" max="4" step="0.5" value="${up.lineThick||1}" />
+        </div>
+        <div style="margin-top:6px;">
+          <input type="text" class="pt-letter" value="${up.customLetter||''}" placeholder="Label: ${letter}"
+            style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);
+              border-radius:4px;color:var(--text);font-size:11px;padding:4px 7px;outline:none;" />
         </div>`;
 
       // Wire events — exactly as solubility curve does it
