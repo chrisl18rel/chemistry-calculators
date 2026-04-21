@@ -850,6 +850,11 @@ textarea { resize: vertical; min-height: 60px; }
 .stoi-radio { display: flex; align-items: center; gap: 4px; font-size: 13px; color: #333; cursor: pointer; }
 .stoi-radio input { accent-color: #1a56a8; width: 15px; height: 15px; }
 
+/* Inside the dark sidebar, labels and radio text must be light */
+.controls-panel .stoi-lbl { color: var(--text-dim); }
+.controls-panel .stoi-radio { color: var(--text); }
+.controls-panel .mini-note { color: var(--text-dim); }
+
 /* Calculate button */
 .stoi-calc-btn {
   background: #1a56a8;
