@@ -289,29 +289,30 @@ const PhCalculator = (() => {
     const compound = detectCompound(raw);
     if (!compound) {
       resultEl.innerHTML = `<div style="background:#fff8e1;border:1px solid #ffc107;
-        border-radius:5px;padding:8px 10px;font-size:12px;line-height:1.6;">
+        border-radius:5px;padding:8px 10px;font-size:12px;line-height:1.6;color:#5a4000;">
         <strong style="color:#856404;">⚠ Compound not in database.</strong>
-        Tell us what type it is and we'll proceed:
+        <span style="color:#5a4000;"> Tell us what type it is and we'll proceed:</span>
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
-          <label class="stoi-radio" style="font-size:12px;">
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#3a2800;cursor:pointer;">
             <input type="radio" name="ph-smart-override" value="strong-acid"
               onchange="PhCalculator.smartOverrideChanged()" /> Strong Acid
           </label>
-          <label class="stoi-radio" style="font-size:12px;">
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#3a2800;cursor:pointer;">
             <input type="radio" name="ph-smart-override" value="strong-base"
               onchange="PhCalculator.smartOverrideChanged()" /> Strong Base
           </label>
-          <label class="stoi-radio" style="font-size:12px;">
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#3a2800;cursor:pointer;">
             <input type="radio" name="ph-smart-override" value="weak-acid"
               onchange="PhCalculator.smartOverrideChanged()" /> Weak Acid
           </label>
-          <label class="stoi-radio" style="font-size:12px;">
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#3a2800;cursor:pointer;">
             <input type="radio" name="ph-smart-override" value="weak-base"
               onchange="PhCalculator.smartOverrideChanged()" /> Weak Base
           </label>
         </div>
         <div id="ph-smart-override-n" style="display:none;margin-top:6px;">
-          <label class="stoi-lbl" style="font-size:11px;">Ions per formula unit (e.g. 2 for Ca(OH)₂)</label>
+          <label style="font-size:11px;color:#5a4000;font-weight:600;text-transform:uppercase;
+            letter-spacing:0.4px;display:block;margin-bottom:3px;">Ions per formula unit (e.g. 2 for Ca(OH)₂)</label>
           <input type="number" id="ph-smart-n-override" min="1" step="1" value="1"
             class="stoi-num-input" style="width:60px;" />
         </div>
