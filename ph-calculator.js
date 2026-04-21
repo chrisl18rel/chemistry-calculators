@@ -1480,6 +1480,7 @@ const PhCalculator = (() => {
 
   // ── INTERACTIVE CANVAS ──
   let _tit = null; // current titration state
+  let _exporting = false; // suppress UI-only canvas decorations during PNG export
   const PAD = { top: 40, right: 30, bottom: 64, left: 55 };
 
   function _initCanvas() {
@@ -1981,10 +1982,16 @@ const PhCalculator = (() => {
       ctx.fillStyle = color;
       ctx.textAlign = 'left';
       ctx.fillText(text, lx, ly);
-      // Subtle drag handle indicator
-      ctx.strokeStyle = color + '66';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(lx - 2, ly - style.labelSize, ctx.measureText(text).width + 4, style.labelSize + 4);
+      // Dotted drag-handle indicator — hidden during PNG export
+      if (!_exporting) {
+        ctx.save();
+        ctx.strokeStyle = color + '88';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.strokeRect(lx - 2, ly - style.labelSize, ctx.measureText(text).width + 4, style.labelSize + 4);
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
     };
 
     drawLabel('equiv', xs(Veq)+3, PAD.top+14, `Equiv. (${Veq.toFixed(1)} mL)`, style.equivColor);
@@ -2059,15 +2066,23 @@ const PhCalculator = (() => {
   function exportCurve() {
     const canvas = document.getElementById('ph-tit-canvas');
     if (!canvas) { showAlert('No titration curve to export. Run a titration calculation first.', true); return; }
+    _exporting = true;
+    redrawChart();
     const link = document.createElement('a');
     link.download = 'titration-curve.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
+    _exporting = false;
+    redrawChart();
   }
 
   function exportFull() {
     const canvas = document.getElementById('ph-tit-canvas');
     if (!canvas || !_tit) { showAlert('No titration curve to export.', true); return; }
+
+    // Redraw without UI decorations before capturing
+    _exporting = true;
+    redrawChart();
 
     // Create an off-screen canvas with extra height for data + explanation
     const srcW  = canvas.width;
@@ -2135,6 +2150,8 @@ const PhCalculator = (() => {
     link.download = 'titration-full.png';
     link.href = offCanvas.toDataURL('image/png');
     link.click();
+    _exporting = false;
+    redrawChart();
   }
 
   function clearAll() {
