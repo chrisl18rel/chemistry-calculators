@@ -1496,21 +1496,49 @@ const PhCalculator = (() => {
 
   function _hitTestLabels(canvas, mx, my) {
     if (!_tit) return null;
-    const { points, Veq, Vmid, pKa, isWeak, labelPos, style } = _tit;
+    const { points, Veq, Vmid, pKa, isWeak, labelPos, userPoints, style } = _tit;
     const maxX = points.length ? points[points.length-1].x : 60;
     const xs = _xScale(canvas, maxX), ys = _yScale(canvas);
-    const R = 18; // hit radius
 
+    // 1. User point LABELS (draggable)
+    for (let i = userPoints.length - 1; i >= 0; i--) {
+      const up = userPoints[i];
+      if (!up.showLabel) continue;
+      const px = xs(up.vx), py = ys(up.vy);
+      const lx = up.labelOffset ? px + up.labelOffset.dx : px + 6;
+      const ly = up.labelOffset ? py + up.labelOffset.dy : py - 4;
+      const labelText = (up.customLabel && up.customLabel.trim()) ? up.customLabel.trim() : '(' + up.vx.toFixed(1) + ', ' + up.vy.toFixed(2) + ')';
+      const tw = labelText.length * (style.labelSize * 0.6);
+      const th = style.labelSize + 4;
+      if (mx >= lx - 2 && mx <= lx + tw + 4 && my >= ly - th && my <= ly + 4) {
+        return { kind: 'userLabel', idx: i, offX: mx - lx, offY: my - ly };
+      }
+    }
+
+    // 2. User point DOTS (drag to move)
+    for (let i = userPoints.length - 1; i >= 0; i--) {
+      const up = userPoints[i];
+      const px = xs(up.vx), py = ys(up.vy);
+      const dx = mx - px, dy = my - py;
+      if (Math.sqrt(dx*dx + dy*dy) <= 10) {
+        return { kind: 'userDot', idx: i, offX: dx, offY: dy };
+      }
+    }
+
+    // 3. Reference labels (equiv, half-equiv, pKa, buffer)
+    const R = 18;
     const candidates = [
-      { key:'equiv',    cx: labelPos.equiv    ? labelPos.equiv.x    : xs(Veq) + 3,  cy: labelPos.equiv    ? labelPos.equiv.y    : PAD.top + 14 },
+      { key:'equiv', cx: labelPos.equiv ? labelPos.equiv.x : xs(Veq)+3, cy: labelPos.equiv ? labelPos.equiv.y : PAD.top+14 },
     ];
     if (isWeak) {
-      candidates.push({ key:'halfEquiv', cx: labelPos.halfEquiv ? labelPos.halfEquiv.x : xs(Vmid) + 3, cy: labelPos.halfEquiv ? labelPos.halfEquiv.y : PAD.top + 28 });
-      candidates.push({ key:'buffer',   cx: labelPos.buffer    ? labelPos.buffer.x    : xs(Vmid/2), cy: labelPos.buffer    ? labelPos.buffer.y    : canvas.height - PAD.bottom - 10 });
+      candidates.push({ key:'halfEquiv', cx: labelPos.halfEquiv ? labelPos.halfEquiv.x : xs(Vmid)+3, cy: labelPos.halfEquiv ? labelPos.halfEquiv.y : PAD.top+28 });
+      candidates.push({ key:'buffer', cx: labelPos.buffer ? labelPos.buffer.x : xs(Vmid/2), cy: labelPos.buffer ? labelPos.buffer.y : canvas.height - PAD.bottom - 10 });
       if (pKa !== null) candidates.push({ key:'pka', cx: labelPos.pka ? labelPos.pka.x : canvas.width - PAD.right - 50, cy: labelPos.pka ? labelPos.pka.y : ys(pKa) - 6 });
     }
     for (const c of candidates) {
-      if (Math.abs(mx - c.cx) < R*2 && Math.abs(my - c.cy) < 14) return { key: c.key, offX: mx - c.cx, offY: my - c.cy };
+      if (Math.abs(mx - c.cx) < R*2 && Math.abs(my - c.cy) < 14) {
+        return { kind: 'refLabel', key: c.key, offX: mx - c.cx, offY: my - c.cy };
+      }
     }
     return null;
   }
@@ -1520,11 +1548,11 @@ const PhCalculator = (() => {
     const { x, y } = _canvasCoords(canvas, e);
     const hit = _hitTestLabels(canvas, x, y);
     if (hit) {
-      canvas._dragging = hit;
+      canvas._dragging = { ...hit, moved: false };
       canvas.style.cursor = 'grabbing';
+      e.preventDefault();
       return;
     }
-    // Click in plot area = add user point
     if (!_tit) return;
     const maxX = _tit.points.length ? _tit.points[_tit.points.length-1].x : 60;
     const CW = canvas.width - PAD.left - PAD.right;
@@ -1536,8 +1564,10 @@ const PhCalculator = (() => {
         vx: vol, vy: Math.min(Math.max(pH, 0), 14),
         showLabel: true, showLines: true,
         customLabel: '',
+        dotColor:  _tit.style.pointLineColor,
         lineColor: _tit.style.pointLineColor,
         lineWidth: _tit.style.pointLineWidth,
+        labelOffset: null,
       });
       _buildUserPointsList();
       redrawChart();
@@ -1546,16 +1576,59 @@ const PhCalculator = (() => {
 
   function _onCanvasMouseMove(e) {
     const canvas = this;
-    if (!canvas._dragging) return;
     const { x, y } = _canvasCoords(canvas, e);
-    const key = canvas._dragging.key;
-    _tit.labelPos[key] = { x: x - canvas._dragging.offX, y: y - canvas._dragging.offY };
-    redrawChart();
+
+    if (!canvas._dragging) {
+      const hit = _hitTestLabels(canvas, x, y);
+      if (hit) canvas.style.cursor = hit.kind === 'userDot' ? 'move' : 'grab';
+      else canvas.style.cursor = 'crosshair';
+      return;
+    }
+
+    const drag = canvas._dragging;
+    drag.moved = true;
+
+    if (drag.kind === 'userDot') {
+      const maxX = _tit.points.length ? _tit.points[_tit.points.length-1].x : 60;
+      const CW = canvas.width - PAD.left - PAD.right;
+      const CH = canvas.height - PAD.top - PAD.bottom;
+      const clampedX = Math.max(PAD.left, Math.min(PAD.left+CW, x - drag.offX));
+      const clampedY = Math.max(PAD.top,  Math.min(PAD.top+CH,  y - drag.offY));
+      const vol = _xInv(canvas, maxX)(clampedX);
+      const pH  = _yInv(canvas)(clampedY);
+      const up = _tit.userPoints[drag.idx];
+      up.vx = Math.round(vol * 10) / 10;
+      up.vy = Math.round(Math.min(Math.max(pH, 0), 14) * 100) / 100;
+      redrawChart();
+      const coordEl = document.getElementById('ph-pt-coords-' + drag.idx);
+      if (coordEl) coordEl.textContent = '(' + up.vx.toFixed(1) + ' mL, pH ' + up.vy.toFixed(2) + ')';
+
+    } else if (drag.kind === 'userLabel') {
+      const maxX = _tit.points.length ? _tit.points[_tit.points.length-1].x : 60;
+      const xs = _xScale(canvas, maxX);
+      const ys = _yScale(canvas);
+      const up = _tit.userPoints[drag.idx];
+      const px = xs(up.vx), py = ys(up.vy);
+      const newLx = x - drag.offX;
+      const newLy = y - drag.offY;
+      up.labelOffset = { dx: newLx - px, dy: newLy - py };
+      redrawChart();
+
+    } else if (drag.kind === 'refLabel') {
+      _tit.labelPos[drag.key] = { x: x - drag.offX, y: y - drag.offY };
+      redrawChart();
+    }
   }
 
   function _onCanvasMouseUp() {
     const canvas = document.getElementById('ph-tit-canvas');
-    if (canvas) { canvas._dragging = null; canvas.style.cursor = 'crosshair'; }
+    if (canvas) {
+      if (canvas._dragging && canvas._dragging.kind === 'userDot' && canvas._dragging.moved) {
+        _buildUserPointsList();
+      }
+      canvas._dragging = null;
+      canvas.style.cursor = 'crosshair';
+    }
   }
 
   function redrawChart() {
@@ -1683,26 +1756,38 @@ const PhCalculator = (() => {
     // User-added points
     for (const up of userPoints) {
       const px = xs(up.vx), py = ys(up.vy);
-      // Dot
-      ctx.fillStyle = up.lineColor;
+      // Dot (uses dotColor)
+      ctx.fillStyle = up.dotColor || up.lineColor || '#4a90e2';
       ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI*2); ctx.fill();
-      // Crosshair lines
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+      // Crosshair lines (uses lineColor)
       if (up.showLines) {
         ctx.setLineDash([4, 3]);
-        ctx.strokeStyle = up.lineColor; ctx.lineWidth = up.lineWidth;
+        ctx.strokeStyle = up.lineColor || '#4a90e2'; ctx.lineWidth = up.lineWidth || 1;
         ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, PAD.top+CH); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(PAD.left, py); ctx.stroke();
         ctx.setLineDash([]);
       }
-      // Label
+      // Label (draggable via labelOffset)
       if (up.showLabel) {
-        ctx.font = `${style.labelSize}px Segoe UI, sans-serif`;
-        ctx.fillStyle = style.labelColor;
-        ctx.textAlign = 'left';
-        const labelText = up.customLabel && up.customLabel.trim()
+        const labelText = (up.customLabel && up.customLabel.trim())
           ? up.customLabel.trim()
           : `(${up.vx.toFixed(1)}, ${up.vy.toFixed(2)})`;
-        ctx.fillText(labelText, px+6, py-4);
+        const lx = up.labelOffset ? px + up.labelOffset.dx : px + 6;
+        const ly = up.labelOffset ? py + up.labelOffset.dy : py - 4;
+        ctx.font = `${style.labelSize}px Segoe UI, sans-serif`;
+        ctx.textAlign = 'left';
+        // White outline for readability
+        ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 3;
+        ctx.strokeText(labelText, lx, ly);
+        ctx.fillStyle = style.labelColor;
+        ctx.fillText(labelText, lx, ly);
+        // Subtle drag indicator underline
+        const tw = ctx.measureText(labelText).width;
+        ctx.strokeStyle = (up.dotColor || up.lineColor || '#4a90e2') + '55';
+        ctx.lineWidth = 1; ctx.setLineDash([2,2]);
+        ctx.beginPath(); ctx.moveTo(lx, ly+2); ctx.lineTo(lx+tw, ly+2); ctx.stroke();
+        ctx.setLineDash([]);
       }
     }
 
@@ -1855,26 +1940,26 @@ const PhCalculator = (() => {
     container.innerHTML = userPoints.map((up, i) => `
       <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;
         padding:8px 10px;margin-bottom:6px;">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-          <div style="width:10px;height:10px;border-radius:50%;background:${up.lineColor};flex-shrink:0;"></div>
-          <span style="font-size:11px;font-weight:700;color:var(--text);">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:${up.dotColor||up.lineColor};flex-shrink:0;"></div>
+          <span id="ph-pt-coords-${i}" style="font-size:11px;font-weight:700;color:var(--text);flex:1;">
             (${up.vx.toFixed(1)} mL, pH ${up.vy.toFixed(2)})
           </span>
           <button onclick="PhCalculator.removeUserPoint(${i})"
-            style="margin-left:auto;background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;line-height:1;"
-            title="Remove point">×</button>
+            style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:15px;line-height:1;padding:0;"
+            title="Remove this point">×</button>
         </div>
 
-        <div style="margin-bottom:6px;">
-          <label class="stoi-lbl">Custom Label</label>
-          <input type="text" id="ph-pt-label-${i}" placeholder="Leave blank for (x, y)"
+        <div style="margin-bottom:5px;">
+          <label class="stoi-lbl">Label text</label>
+          <input type="text" id="ph-pt-label-${i}" placeholder="Blank = ordered pair (x, y)"
             value="${up.customLabel || ''}"
             class="stoi-num-input" style="width:100%;box-sizing:border-box;font-family:inherit;"
             oninput="PhCalculator.updateUserPoint(${i})" />
-          <div class="mini-note">Blank = shows ordered pair automatically</div>
+          <div class="mini-note">Drag the label on the graph to reposition it</div>
         </div>
 
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap;">
+        <div style="display:flex;gap:10px;margin-bottom:5px;flex-wrap:wrap;">
           <label class="stoi-radio" style="font-size:11px;">
             <input type="checkbox" id="ph-pt-lbl-${i}" ${up.showLabel?'checked':''}
               onchange="PhCalculator.updateUserPoint(${i})" /> Show label
@@ -1885,14 +1970,19 @@ const PhCalculator = (() => {
           </label>
         </div>
 
-        <div style="display:flex;align-items:center;gap:8px;">
-          <label class="stoi-lbl" style="margin:0;">Color</label>
-          <button id="ph-pt-color-btn-${i}" class="color-swatch-btn"
+        <div style="display:grid;grid-template-columns:auto 24px auto 24px auto 55px;
+          align-items:center;gap:5px;font-size:10px;color:var(--text-dim);">
+          <span>Dot</span>
+          <button id="ph-pt-dot-btn-${i}" class="color-swatch-btn"
+            style="background:${up.dotColor||up.lineColor};width:24px;height:24px;"
+            onclick="PhCalculator.openDotColorPicker(${i}, this)"></button>
+          <span>Lines</span>
+          <button id="ph-pt-line-btn-${i}" class="color-swatch-btn"
             style="background:${up.lineColor};width:24px;height:24px;"
-            onclick="PhCalculator.openPointColorPicker(${i}, this)"></button>
-          <label class="stoi-lbl" style="margin:0;">Width</label>
-          <input type="number" id="ph-pt-width-${i}" value="${up.lineWidth}"
-            min="0.5" max="5" step="0.5" class="stoi-num-input" style="width:55px;"
+            onclick="PhCalculator.openLineColorPicker(${i}, this)"></button>
+          <span>Width</span>
+          <input type="number" id="ph-pt-width-${i}" value="${up.lineWidth||1}"
+            min="0.5" max="5" step="0.5" class="stoi-num-input" style="width:55px;font-size:11px;"
             oninput="PhCalculator.updateUserPoint(${i})" />
         </div>
       </div>`).join('');
@@ -1902,14 +1992,11 @@ const PhCalculator = (() => {
     if (!_tit) return;
     const up = _tit.userPoints[i];
     if (!up) return;
-    const lblInput = document.getElementById(`ph-pt-label-${i}`);
-    const lblCheck = document.getElementById(`ph-pt-lbl-${i}`);
-    const lineCheck = document.getElementById(`ph-pt-lines-${i}`);
-    const widthInput = document.getElementById(`ph-pt-width-${i}`);
-    if (lblInput)  up.customLabel = lblInput.value;
-    if (lblCheck)  up.showLabel   = lblCheck.checked;
-    if (lineCheck) up.showLines   = lineCheck.checked;
-    if (widthInput) up.lineWidth  = parseFloat(widthInput.value) || 1;
+    const g = id => document.getElementById(id);
+    if (g(`ph-pt-label-${i}`))  up.customLabel = g(`ph-pt-label-${i}`).value;
+    if (g(`ph-pt-lbl-${i}`))    up.showLabel   = g(`ph-pt-lbl-${i}`).checked;
+    if (g(`ph-pt-lines-${i}`))  up.showLines   = g(`ph-pt-lines-${i}`).checked;
+    if (g(`ph-pt-width-${i}`))  up.lineWidth   = parseFloat(g(`ph-pt-width-${i}`).value) || 1;
     redrawChart();
   }
 
@@ -1920,21 +2007,39 @@ const PhCalculator = (() => {
     redrawChart();
   }
 
-  function openPointColorPicker(i, btn) {
+  function openDotColorPicker(i, btn) {
     if (!_tit) return;
     const up = _tit.userPoints[i];
     if (!up) return;
-    openColorPicker(btn, up.lineColor, (col) => {
+    openColorPicker(btn, up.dotColor || up.lineColor || '#4a90e2', (col) => {
+      up.dotColor = col;
+      const sw = document.getElementById(`ph-pt-dot-btn-${i}`);
+      if (sw) sw.style.background = col;
+      // Update the dot indicator in the header
+      const dotEl = document.querySelector(`#ph-pt-coords-${i}`)?.previousElementSibling;
+      if (dotEl) dotEl.style.background = col;
+      redrawChart();
+    });
+  }
+
+  function openLineColorPicker(i, btn) {
+    if (!_tit) return;
+    const up = _tit.userPoints[i];
+    if (!up) return;
+    openColorPicker(btn, up.lineColor || '#4a90e2', (col) => {
       up.lineColor = col;
-      // Update the swatch button background
-      const sw = document.getElementById(`ph-pt-color-btn-${i}`);
+      const sw = document.getElementById(`ph-pt-line-btn-${i}`);
       if (sw) sw.style.background = col;
       redrawChart();
     });
   }
 
+  // Keep openPointColorPicker as alias for backward compat
+  function openPointColorPicker(i, btn) { openLineColorPicker(i, btn); }
+
   return { init, setMode, calculate, clearAll, exportCurve, exportFull, redrawChart,
-           updateTitStyle, clearUserPoints, updateUserPoint, removeUserPoint, openPointColorPicker,
+           updateTitStyle, clearUserPoints, updateUserPoint, removeUserPoint,
+           openPointColorPicker, openDotColorPicker, openLineColorPicker,
            smartDetect, smartUpdateFields, smartOverrideChanged, bufferModeSwitch };
 })();
 
