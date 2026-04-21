@@ -90,18 +90,28 @@ const PhCalculator = (() => {
   function buildInputs() {
     const c = document.getElementById('ph-input-fields');
     if (!c) return;
+
+    if (currentMode === 'polyprotic') {
+      if (typeof Polyprotic === 'undefined') { c.innerHTML = '<div class="mini-note">Polyprotic module not loaded.</div>'; return; }
+      c.innerHTML = Polyprotic.polyproticInputs();
+      Polyprotic.modeSwitch();
+      return;
+    }
+
     const templates = {
-      'smart':       smartInputs,
-      'strong-acid': strongAcidInputs,
-      'strong-base': strongBaseInputs,
-      'weak-acid':   weakAcidInputs,
-      'weak-base':   weakBaseInputs,
-      'buffer':      bufferInputs,
-      'titration':   titrationInputs,
+      'smart':           smartInputs,
+      'strong-acid':     strongAcidInputs,
+      'strong-base':     strongBaseInputs,
+      'weak-acid':       weakAcidInputs,
+      'weak-base':       weakBaseInputs,
+      'buffer':          bufferInputs,
+      'buffer-addition': bufferAdditionInputs,
+      'titration':       titrationInputs,
     };
     c.innerHTML = (templates[currentMode] || (() => ''))();
-    // Populate dynamic sub-fields for buffer mode
+    // Populate dynamic sub-fields
     if (currentMode === 'buffer') bufferModeSwitch();
+    if (currentMode === 'buffer-addition') bufferAdditionSwitch();
   }
 
   function smartInputs() {
@@ -256,6 +266,181 @@ const PhCalculator = (() => {
     }
   }
 
+
+
+    // ── BUFFER + STRONG ACID/BASE ADDITION ──
+  function bufferAdditionInputs() {
+    return `
+      <div class="mini-note" style="margin-bottom:8px;line-height:1.5;">
+        Calculate how a buffer's pH changes when a strong acid or base is added.
+        Enter the initial buffer composition, then the addition.
+      </div>
+      <div class="display-divider"></div>
+      <div class="mini-note" style="font-weight:700;color:var(--text);margin-bottom:6px;">INITIAL BUFFER</div>
+      ${selectField('ph-ba-type', 'Buffer Type', [
+        ['acid', 'Weak Acid + Conjugate Base (e.g. HF / F\u207b)'],
+        ['base', 'Weak Base + Conjugate Acid (e.g. NH\u2083 / NH\u2084\u207a)'],
+      ])}
+      ${selectField('ph-ba-ktype', 'Equilibrium Constant', [['Ka','Ka'],['Kb','Kb (converts)'],['pKa','pKa']])}
+      ${numField('ph-ba-kval', 'Value', 'e.g. 6.8e-4')}
+      ${selectField('ph-ba-input', 'Amounts given as', [
+        ['moles','Moles of each component'],
+        ['conc-vol','Concentration (mol/L) + Volume (mL)'],
+      ], 'PhCalculator.bufferAdditionSwitch()')}
+      <div id="ph-ba-amount-fields"></div>
+      <div class="display-divider"></div>
+      <div class="mini-note" style="font-weight:700;color:var(--text);margin-bottom:6px;">ADDITION</div>
+      ${selectField('ph-ba-add-type', 'Add a', [
+        ['strong-base','Strong Base (e.g. NaOH, KOH)'],
+        ['strong-acid','Strong Acid (e.g. HCl, HNO\u2083)'],
+      ])}
+      ${numField('ph-ba-add-mol', 'Moles added', 'e.g. 0.010')}`;
+  }
+
+  function bufferAdditionSwitch() {
+    const mode = document.getElementById('ph-ba-input')?.value;
+    const container = document.getElementById('ph-ba-amount-fields');
+    if (!container) return;
+    if (mode === 'conc-vol') {
+      container.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;">
+          <div><label class="stoi-lbl">Weak Acid [HA] (mol/L)</label>
+            <input type="number" id="ph-ba-acid-c" min="0" step="any" placeholder="e.g. 0.10"
+              class="stoi-num-input" style="width:100%;box-sizing:border-box;" /></div>
+          <div><label class="stoi-lbl">HA Volume (mL)</label>
+            <input type="number" id="ph-ba-acid-v" min="0" step="any" placeholder="e.g. 500"
+              class="stoi-num-input" style="width:100%;box-sizing:border-box;" /></div>
+          <div><label class="stoi-lbl">Conj. Base [A\u207b] (mol/L)</label>
+            <input type="number" id="ph-ba-base-c" min="0" step="any" placeholder="e.g. 0.10"
+              class="stoi-num-input" style="width:100%;box-sizing:border-box;" /></div>
+          <div><label class="stoi-lbl">A\u207b Volume (mL)</label>
+            <input type="number" id="ph-ba-base-v" min="0" step="any" placeholder="e.g. 500"
+              class="stoi-num-input" style="width:100%;box-sizing:border-box;" /></div>
+        </div>`;
+    } else {
+      container.innerHTML = `
+        <div style="margin-top:6px;">
+          <label class="stoi-lbl">Moles of Weak Acid (HA)</label>
+          <input type="number" id="ph-ba-acid-mol" min="0" step="any" placeholder="e.g. 0.050"
+            class="stoi-num-input" style="width:100%;box-sizing:border-box;" /></div>
+        <div style="margin-top:6px;">
+          <label class="stoi-lbl">Moles of Conjugate Base (A\u207b)</label>
+          <input type="number" id="ph-ba-base-mol" min="0" step="any" placeholder="e.g. 0.050"
+            class="stoi-num-input" style="width:100%;box-sizing:border-box;" /></div>`;
+    }
+  }
+
+  function calcBufferAddition() {
+    const bufType   = document.getElementById('ph-ba-type')?.value;
+    const ktype     = document.getElementById('ph-ba-ktype')?.value;
+    const kval      = requirePositive(parseFloat(document.getElementById('ph-ba-kval')?.value), 'Equilibrium constant');
+    const inputMode = document.getElementById('ph-ba-input')?.value;
+    const addType   = document.getElementById('ph-ba-add-type')?.value;
+    const addMol    = requirePositive(parseFloat(document.getElementById('ph-ba-add-mol')?.value), 'Moles added');
+
+    let Ka, pKa;
+    if (ktype === 'pKa') { pKa = kval; Ka = Math.pow(10, -pKa); }
+    else if (ktype === 'Ka') { Ka = kval; pKa = -Math.log10(Ka); }
+    else { Ka = Kw / kval; pKa = -Math.log10(Ka); }
+    const Kb = Kw / Ka;
+
+    let molHA, molA;
+    if (inputMode === 'conc-vol') {
+      const cHA = requirePositive(parseFloat(document.getElementById('ph-ba-acid-c')?.value), '[HA] concentration');
+      const vHA = requirePositive(parseFloat(document.getElementById('ph-ba-acid-v')?.value), 'HA volume (mL)');
+      const cA  = requirePositive(parseFloat(document.getElementById('ph-ba-base-c')?.value), '[A\u207b] concentration');
+      const vA  = requirePositive(parseFloat(document.getElementById('ph-ba-base-v')?.value), 'A\u207b volume (mL)');
+      molHA = cHA * (vHA / 1000);
+      molA  = cA  * (vA  / 1000);
+    } else {
+      molHA = requirePositive(parseFloat(document.getElementById('ph-ba-acid-mol')?.value), 'Moles of weak acid');
+      molA  = requirePositive(parseFloat(document.getElementById('ph-ba-base-mol')?.value), 'Moles of conjugate base');
+    }
+
+    if (addType === 'strong-base' && addMol >= molHA)
+      throw new Error('Moles of base (' + addMol + ') \u2265 available weak acid (' + molHA + ' mol). Buffer capacity exceeded.');
+    if (addType === 'strong-acid' && addMol >= molA)
+      throw new Error('Moles of acid (' + addMol + ') \u2265 available conjugate base (' + molA + ' mol). Buffer capacity exceeded.');
+
+    const pHi = pKa + Math.log10(molA / molHA);
+
+    let molHA_f, molA_f, rxnEq, addLabel;
+    if (addType === 'strong-base') {
+      molHA_f = molHA - addMol; molA_f = molA + addMol;
+      rxnEq = 'HA + OH\u207b \u2192 A\u207b + H\u2082O'; addLabel = 'OH\u207b';
+    } else {
+      molHA_f = molHA + addMol; molA_f = molA - addMol;
+      rxnEq = 'A\u207b + H\u207a \u2192 HA'; addLabel = 'H\u207a';
+    }
+
+    const pHf  = pKa + Math.log10(molA_f / molHA_f);
+    const pOHf = 14 - pHf;
+    const h3of = Math.pow(10, -pHf);
+    const ohf  = Math.pow(10, -pOHf);
+    const deltaPH = pHf - pHi;
+
+    const td = (txt, bold, bg) => '<td style="padding:5px 10px;text-align:center;'
+      + (bold ? 'font-weight:700;color:#1a56a8;' : '') + (bg ? 'background:#f8f9ff;' : '') + '">' + txt + '</td>';
+    const tdC = (txt) => '<td style="padding:5px 10px;text-align:center;color:#e94560;">' + txt + '</td>';
+    const thS = 'padding:6px 10px;background:#e8f0fb;color:#1a2a4a;';
+
+    const stoichTable = '<table style="border-collapse:collapse;margin:4px 0 8px 28px;font-size:12px;'
+      + 'font-family:\'Courier New\',monospace;border:1px solid #dde3f0;">'
+      + '<thead><tr>'
+      + '<th style="' + thS + '">Row</th>'
+      + '<th style="' + thS + '">HA (mol)</th>'
+      + '<th style="' + thS + '">A\u207b (mol)</th>'
+      + '<th style="' + thS + '">' + addLabel + ' (mol)</th>'
+      + '</tr></thead><tbody>'
+      + '<tr><td style="padding:5px 10px;font-weight:700;background:#f8f9ff;">Initial</td>'
+      + td(molHA, false, false) + td(molA, false, false) + td(addMol, false, false) + '</tr>'
+      + '<tr style="background:#fff8f8;"><td style="padding:5px 10px;font-weight:700;">Change</td>'
+      + tdC((addType === 'strong-base' ? '\u2212' : '+') + addMol)
+      + tdC((addType === 'strong-base' ? '+' : '\u2212') + addMol)
+      + tdC('\u2212' + addMol) + '</tr>'
+      + '<tr><td style="padding:5px 10px;font-weight:700;background:#f8f9ff;">After rxn</td>'
+      + td(fmt4(molHA_f), true, false) + td(fmt4(molA_f), true, false) + td('0', true, false) + '</tr>'
+      + '</tbody></table>';
+
+    const changeCard = '<div style="background:#f0f6ff;border:1px solid #c8d5ee;border-radius:6px;'
+      + 'padding:12px 16px;margin:4px 0 8px 28px;">'
+      + '<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;text-align:center;">'
+      + '<div><div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:4px;">Initial pH</div>'
+      + '<div style="font-size:24px;font-weight:700;color:#1a56a8;">' + fmt2(pHi) + '</div></div>'
+      + '<div style="font-size:22px;color:#888;">\u2192</div>'
+      + '<div><div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:4px;">Final pH</div>'
+      + '<div style="font-size:24px;font-weight:700;color:#1a56a8;">' + fmt2(pHf) + '</div></div>'
+      + '</div>'
+      + '<div style="text-align:center;margin-top:10px;font-size:14px;font-weight:700;'
+      + 'color:' + (deltaPH >= 0 ? '#2e7d32' : '#b71c1c') + ';">'
+      + '\u0394pH = ' + (deltaPH >= 0 ? '+' : '') + fmt2(deltaPH)
+      + ' \u2014 pH ' + (deltaPH >= 0 ? 'increased' : 'decreased') + ' by ' + fmt2(Math.abs(deltaPH)) + ' unit' + (Math.abs(deltaPH) !== 1 ? 's' : '')
+      + '</div></div>';
+
+    const steps = [
+      stepLine(1, 'Buffer: <strong>' + (bufType === 'acid' ? 'Weak Acid + Conjugate Base' : 'Weak Base + Conjugate Acid')
+        + '</strong> &nbsp;|&nbsp; pKa = ' + fmt2(pKa)),
+      stepLine(2, 'Find the <strong>initial buffer pH</strong> using Henderson\u2013Hasselbalch:'),
+      eq('pH = pKa + log([A\u207b]/[HA]) = ' + fmt2(pKa) + ' + log(' + molA + '/' + molHA + ') = <strong>' + fmt2(pHi) + '</strong>'),
+      stepLine(3, 'Write the neutralization reaction (' + (addType === 'strong-base' ? 'base consumes HA' : 'acid consumes A\u207b') + '):'),
+      eq(rxnEq),
+      stoichTable,
+      stepLine(4, 'Reaction goes to completion. Apply Henderson\u2013Hasselbalch with new amounts:'),
+      eq('pH = ' + fmt2(pKa) + ' + log(' + fmt4(molA_f) + ' / ' + fmt4(molHA_f) + ')'),
+      eq('pH = ' + fmt2(pKa) + ' + (' + fmt2(Math.log10(molA_f / molHA_f)) + ') = <strong>' + fmt2(pHf) + '</strong>'),
+      changeCard,
+      stepLine(5, 'Final solution properties:'),
+      eq('pOH = 14.00 \u2212 ' + fmt2(pHf) + ' = ' + fmt2(pOHf)),
+      eq('[H\u2083O\u207a] = 10<sup>\u2212' + fmt2(pHf) + '</sup> = ' + sci(h3of) + ' M'),
+      eq('[OH\u207b] = 10<sup>\u2212' + fmt2(pOHf) + '</sup> = ' + sci(ohf) + ' M'),
+      (molA_f / molHA_f >= 0.1 && molA_f / molHA_f <= 10)
+        ? note('\u2713 Final [A\u207b]/[HA] = ' + fmt4(molA_f / molHA_f) + ' is within 0.1\u201310. H\u2013H is reliable.', '#2e7d32')
+        : note('\u26a0 Final [A\u207b]/[HA] = ' + fmt4(molA_f / molHA_f) + ' is outside 0.1\u201310. Buffer capacity significantly reduced.', '#b71c1c'),
+    ].join('');
+
+    renderResults('Buffer + Addition', makeResultsBox(pHf, pOHf, h3of, ohf, Ka, Kb), steps);
+  }
+
   function titrationInputs() {
     return `
       ${selectField('ph-tit-type', 'Titration Type', [
@@ -347,6 +532,14 @@ const PhCalculator = (() => {
         <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-equiv" checked onchange="PhCalculator.updateTitStyle()" /> Equiv. pH point</label>
         <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-after" checked onchange="PhCalculator.updateTitStyle()" /> After equiv. card</label>
         <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-pka" checked onchange="PhCalculator.updateTitStyle()" /> pKa point</label>
+        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-equiv-line" checked onchange="PhCalculator.updateTitStyle()" /> Equiv. dashed line</label>
+        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-half-line" checked onchange="PhCalculator.updateTitStyle()" /> ½-equiv. dashed line</label>
+        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-pka-line" checked onchange="PhCalculator.updateTitStyle()" /> pKa dashed line</label>
+        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-buf-region" checked onchange="PhCalculator.updateTitStyle()" /> Buffer region shading</label>
+        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-equiv-lbl" checked onchange="PhCalculator.updateTitStyle()" /> Equiv. label text</label>
+        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-half-lbl" checked onchange="PhCalculator.updateTitStyle()" /> ½-equiv. label text</label>
+        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-pka-lbl" checked onchange="PhCalculator.updateTitStyle()" /> pKa label text</label>
+        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-buf-lbl" checked onchange="PhCalculator.updateTitStyle()" /> Buffer region label</label>
       </div>
       <div class="display-divider"></div>
       <div class="mini-note" style="font-weight:700;color:var(--text);margin-bottom:6px;">PLOT POINTS</div>
@@ -534,13 +727,15 @@ const PhCalculator = (() => {
   function calculate() {
     try {
       switch (currentMode) {
-        case 'smart':        calcSmart();       break;
-        case 'strong-acid':  calcStrongAcid();  break;
-        case 'strong-base':  calcStrongBase();  break;
-        case 'weak-acid':    calcWeakAcid();    break;
-        case 'weak-base':    calcWeakBase();    break;
-        case 'buffer':       calcBuffer();      break;
-        case 'titration':    calcTitration();   break;
+        case 'smart':            calcSmart();                                          break;
+        case 'strong-acid':      calcStrongAcid();                                     break;
+        case 'strong-base':      calcStrongBase();                                     break;
+        case 'weak-acid':        calcWeakAcid();                                       break;
+        case 'weak-base':        calcWeakBase();                                       break;
+        case 'buffer':           calcBuffer();                                         break;
+        case 'buffer-addition':  calcBufferAddition();                                 break;
+        case 'polyprotic':       if (typeof Polyprotic !== 'undefined') Polyprotic.calculate(); break;
+        case 'titration':        calcTitration();                                      break;
       }
     } catch(e) {
       document.getElementById('ph-results').innerHTML =
@@ -1344,6 +1539,8 @@ const PhCalculator = (() => {
         bufferColor: 'rgba(76,175,80,0.12)',
         pointLineColor: '#4a90e2', pointLineWidth: 1,
         showInitialPH: true, showHalfEquivPH: true, showEquivPH: true, showAfterEquiv: true, showPKa: true,
+        showEquivLine: true, showHalfLine: true, showPkaLine: true,
+        showBufRegion: true, showEquivLbl: true, showHalfLbl: true, showPkaLbl: true, showBufLbl: true,
       },
     };
 
@@ -1888,7 +2085,7 @@ const PhCalculator = (() => {
     }
 
     // Buffer region
-    if (isWeak) {
+    if (isWeak && style.showBufRegion !== false) {
       ctx.fillStyle = style.bufferColor;
       ctx.fillRect(xs(0), PAD.top, xs(Veq) - xs(0), CH);
     }
@@ -1904,14 +2101,17 @@ const PhCalculator = (() => {
 
     // Reference lines
     ctx.setLineDash([5, 4]);
-    ctx.strokeStyle = style.equivColor; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(xs(Veq), PAD.top); ctx.lineTo(xs(Veq), PAD.top+CH); ctx.stroke();
-
+    if (style.showEquivLine !== false) {
+      ctx.strokeStyle = style.equivColor; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(xs(Veq), PAD.top); ctx.lineTo(xs(Veq), PAD.top+CH); ctx.stroke();
+    }
     if (isWeak) {
-      ctx.strokeStyle = style.halfEquivColor;
-      ctx.beginPath(); ctx.moveTo(xs(Vmid), PAD.top); ctx.lineTo(xs(Vmid), PAD.top+CH); ctx.stroke();
-      if (pKa !== null) {
-        ctx.strokeStyle = style.pkaColor;
+      if (style.showHalfLine !== false) {
+        ctx.strokeStyle = style.halfEquivColor; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(xs(Vmid), PAD.top); ctx.lineTo(xs(Vmid), PAD.top+CH); ctx.stroke();
+      }
+      if (pKa !== null && style.showPkaLine !== false) {
+        ctx.strokeStyle = style.pkaColor; ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.moveTo(PAD.left, ys(pKa)); ctx.lineTo(PAD.left+CW, ys(pKa)); ctx.stroke();
       }
     }
@@ -1994,11 +2194,11 @@ const PhCalculator = (() => {
       }
     };
 
-    drawLabel('equiv', xs(Veq)+3, PAD.top+14, `Equiv. (${Veq.toFixed(1)} mL)`, style.equivColor);
+    if (style.showEquivLbl !== false) drawLabel('equiv', xs(Veq)+3, PAD.top+14, `Equiv. (${Veq.toFixed(1)} mL)`, style.equivColor);
 
     if (isWeak) {
-      drawLabel('halfEquiv', xs(Vmid)+3, PAD.top+28, `½-equiv. (${Vmid.toFixed(1)} mL)`, style.halfEquivColor);
-      if (pKa !== null) {
+      if (style.showHalfLbl !== false) drawLabel('halfEquiv', xs(Vmid)+3, PAD.top+28, `½-equiv. (${Vmid.toFixed(1)} mL)`, style.halfEquivColor);
+      if (pKa !== null && style.showPkaLbl !== false) {
         ctx.textAlign = 'right';
         const lx = labelPos.pka ? labelPos.pka.x : PAD.left+CW-4;
         const ly = labelPos.pka ? labelPos.pka.y : ys(pKa)-4;
@@ -2007,13 +2207,15 @@ const PhCalculator = (() => {
         ctx.fillText(`pKa = ${pKa.toFixed(2)}`, lx, ly);
         ctx.textAlign = 'left';
       }
-      ctx.fillStyle = style.bufferColor.replace('0.12','0.8');
-      const bx = labelPos.buffer ? labelPos.buffer.x : xs(Vmid/2);
-      const by = labelPos.buffer ? labelPos.buffer.y : PAD.top+CH-10;
-      ctx.font = `bold ${style.labelSize}px Segoe UI, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#2e7d32';
-      ctx.fillText('Buffer Region', bx, by);
+      if (style.showBufLbl !== false) {
+        ctx.fillStyle = style.bufferColor.replace('0.12','0.8');
+        const bx = labelPos.buffer ? labelPos.buffer.x : xs(Vmid/2);
+        const by = labelPos.buffer ? labelPos.buffer.y : PAD.top+CH-10;
+        ctx.font = `bold ${style.labelSize}px Segoe UI, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#2e7d32';
+        ctx.fillText('Buffer Region', bx, by);
+      }
     }
 
     // ── User-added points (solubility curve style) ──
@@ -2193,13 +2395,21 @@ const PhCalculator = (() => {
     s.showEquivPH    = c('ph-show-equiv');
     s.showAfterEquiv = c('ph-show-after');
     s.showPKa        = c('ph-show-pka');
+    s.showEquivLine  = c('ph-show-equiv-line');
+    s.showHalfLine   = c('ph-show-half-line');
+    s.showPkaLine    = c('ph-show-pka-line');
+    s.showBufRegion  = c('ph-show-buf-region');
+    s.showEquivLbl   = c('ph-show-equiv-lbl');
+    s.showHalfLbl    = c('ph-show-half-lbl');
+    s.showPkaLbl     = c('ph-show-pka-lbl');
+    s.showBufLbl     = c('ph-show-buf-lbl');
 
     redrawChart();
   }
 
   return { init, setMode, calculate, clearAll, exportCurve, exportFull, redrawChart,
            updateTitStyle, clearUserPoints, updateUserPoint, removeUserPoint, pickPointColor,
-           toggleSnapToLine, addPointManual,
+           toggleSnapToLine, addPointManual, bufferAdditionSwitch,
            smartDetect, smartUpdateFields, smartOverrideChanged, bufferModeSwitch };
 })();
 
