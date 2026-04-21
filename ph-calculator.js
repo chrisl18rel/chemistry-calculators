@@ -1508,6 +1508,7 @@ const PhCalculator = (() => {
       lineThick:   s.pointLineWidth || 1,
       customLabel: '',
       labelOff:    null,
+      snapToLine:  false,
     };
   }
 
@@ -1529,6 +1530,21 @@ const PhCalculator = (() => {
       px: PAD.left + (vx / maxX) * CW,
       py: PAD.top  + (1 - vy / 14) * CH,
     };
+  }
+
+  // Interpolate pH from the curve's data points at a given volume vx
+  function _interpCurve(vx) {
+    const pts = _tit.points;
+    if (!pts || pts.length === 0) return null;
+    if (vx <= pts[0].x) return pts[0].y;
+    if (vx >= pts[pts.length-1].x) return pts[pts.length-1].y;
+    for (let i = 0; i < pts.length-1; i++) {
+      if (vx >= pts[i].x && vx <= pts[i+1].x) {
+        const t = (vx - pts[i].x) / (pts[i+1].x - pts[i].x);
+        return pts[i].y + t * (pts[i+1].y - pts[i].y);
+      }
+    }
+    return null;
   }
 
   // Hit-test priority: user label → user dot → reference labels
@@ -1619,8 +1635,15 @@ const PhCalculator = (() => {
       const CH = canvas.height - PAD.top - PAD.bottom;
       const cx = Math.max(PAD.left, Math.min(PAD.left+CW, x));
       const cy = Math.max(PAD.top,  Math.min(PAD.top+CH,  y));
-      const { vx, vy } = _pxToData(canvas, cx, cy);
       const up = _tit.userPoints[d.idx];
+      let { vx, vy } = _pxToData(canvas, cx, cy);
+      if (up.snapToLine) {
+        // Constrain to curve: only vx changes, vy is interpolated
+        const maxX = _tit.points[_tit.points.length-1].x;
+        vx = Math.max(0, Math.min(maxX, vx));
+        const snapped = _interpCurve(vx);
+        if (snapped !== null) vy = Math.round(snapped * 100) / 100;
+      }
       up.vx = vx; up.vy = vy;
       redrawChart();
       const el = document.getElementById('ph-pt-coords-'+d.idx);
@@ -1678,6 +1701,10 @@ const PhCalculator = (() => {
             <input type="checkbox" ${up.showDotted?'checked':''} onchange="PhCalculator.updateUserPoint(${i},'showDotted',this.checked)" />
             Show dotted projection lines
           </label>
+          <label class="point-toggle">
+            <input type="checkbox" ${up.snapToLine?'checked':''} onchange="PhCalculator.toggleSnapToLine(${i},this.checked)" />
+            Snap to curve line
+          </label>
         </div>
 
         <div style="margin-bottom:6px;">
@@ -1715,6 +1742,22 @@ const PhCalculator = (() => {
     const up = _tit.userPoints[i];
     if (!up) return;
     up[key] = value;
+    redrawChart();
+  }
+
+  function toggleSnapToLine(i, snap) {
+    if (!_tit) return;
+    const up = _tit.userPoints[i];
+    if (!up) return;
+    up.snapToLine = snap;
+    if (snap) {
+      // Immediately snap vy to the curve at current vx
+      const snapped = _interpCurve(up.vx);
+      if (snapped !== null) up.vy = Math.round(snapped * 100) / 100;
+      // Update sidebar coords
+      const el = document.getElementById('ph-pt-coords-' + i);
+      if (el) el.textContent = up.vx.toFixed(1) + ' mL, pH ' + up.vy.toFixed(2);
+    }
     redrawChart();
   }
 
@@ -2082,6 +2125,7 @@ const PhCalculator = (() => {
 
   return { init, setMode, calculate, clearAll, exportCurve, exportFull, redrawChart,
            updateTitStyle, clearUserPoints, updateUserPoint, removeUserPoint, pickPointColor,
+           toggleSnapToLine,
            smartDetect, smartUpdateFields, smartOverrideChanged, bufferModeSwitch };
 })();
 
