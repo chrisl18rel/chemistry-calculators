@@ -1722,9 +1722,10 @@ const PhCalculator = (() => {
       const card = document.createElement('div');
       card.className = 'point-card';
       card.id = 'ph-point-card-' + i;
+      const displayLetter = up.customLetter && up.customLetter.trim() ? up.customLetter.trim() : letter;
       card.innerHTML = `
         <div class="point-card-header">
-          <div class="point-label-badge" style="background:${up.dotColor||'#e94560'};">${letter}</div>
+          <div class="point-label-badge" style="background:${up.dotColor||'#e94560'};">${displayLetter}</div>
           <div class="point-coords" id="ph-pt-coords-${i}">${xR} mL, pH ${yR}</div>
           <button class="point-delete" title="Remove">×</button>
         </div>
@@ -1732,6 +1733,13 @@ const PhCalculator = (() => {
           <label class="point-toggle"><input type="checkbox" class="pt-dotted" ${up.showDotted?'checked':''} /> Show projection lines</label>
           <label class="point-toggle"><input type="checkbox" class="pt-coord"  ${up.showCoord ?'checked':''} /> Show ordered pair label</label>
           <label class="point-toggle"><input type="checkbox" class="pt-snap"   ${up.snapToLine?'checked':''} /> Snap to curve line</label>
+        </div>
+        <div style="margin-bottom:6px;">
+          <label class="stoi-lbl" style="display:block;margin-bottom:3px;">Point label</label>
+          <input type="text" class="pt-letter" value="${up.customLetter||''}" placeholder="${letter} (default)"
+            class="stoi-num-input" style="width:100%;box-sizing:border-box;background:var(--bg);
+              border:1px solid var(--border2);border-radius:4px;color:var(--text);
+              font-size:12px;padding:5px 8px;outline:none;" />
         </div>
         <div class="point-color-row">
           <label>Dot</label>
@@ -1752,6 +1760,15 @@ const PhCalculator = (() => {
       card.querySelector('.pt-dotted').onchange = e => { up.showDotted = e.target.checked; redrawChart(); };
       card.querySelector('.pt-coord').onchange  = e => { up.showCoord  = e.target.checked; redrawChart(); };
       card.querySelector('.pt-snap').onchange   = e => { toggleSnapToLine(i, e.target.checked); };
+
+      card.querySelector('.pt-letter').oninput = e => {
+        up.customLetter = e.target.value;
+        const badge = card.querySelector('.point-label-badge');
+        const LABELS2 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const def = LABELS2[i % LABELS2.length];
+        if (badge) badge.textContent = e.target.value.trim() || def;
+        redrawChart();
+      };
 
       const dotSw = card.querySelector('.pt-dot-sw');
       dotSw.addEventListener('click', ev => {
@@ -1998,7 +2015,7 @@ const PhCalculator = (() => {
     const LABELS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     userPoints.forEach((up, i) => {
       const px = xs(up.vx), py = ys(up.vy);
-      const letter = LABELS[i % LABELS.length];
+      const letter = (up.customLetter && up.customLetter.trim()) ? up.customLetter.trim() : LABELS[i % LABELS.length];
 
       // Dotted projection lines
       if (up.showDotted) {
