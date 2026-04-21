@@ -340,28 +340,50 @@ const PhCalculator = (() => {
             oninput="PhCalculator.updateTitStyle()" /></div>
       </div>
       <div class="display-divider"></div>
-      <div class="mini-note" style="font-weight:700;color:var(--text);margin-bottom:6px;">ADDED POINT LINES</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px;">
-        <div><label class="stoi-lbl">Color</label>
-          <input type="color" id="ph-tit-pt-color" value="#4a90e2"
-            style="width:100%;height:28px;border:1px solid #c8d5ee;border-radius:5px;cursor:pointer;"
-            oninput="PhCalculator.updateTitStyle()" /></div>
-        <div><label class="stoi-lbl">Thickness</label>
-          <input type="number" id="ph-tit-pt-width" value="1" min="1" max="5"
-            class="stoi-num-input" style="width:100%;box-sizing:border-box;" oninput="PhCalculator.updateTitStyle()" /></div>
+      <div class="mini-note" style="font-weight:700;color:var(--text);margin-bottom:6px;">SHOW/HIDE ON GRAPH</div>
+      <div style="display:flex;flex-direction:column;gap:3px;margin-bottom:8px;">
+        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-init" checked onchange="PhCalculator.updateTitStyle()" /> Initial pH point</label>
+        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-half" checked onchange="PhCalculator.updateTitStyle()" /> Half-equiv. pH point</label>
+        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-equiv" checked onchange="PhCalculator.updateTitStyle()" /> Equiv. pH point</label>
+        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-after" checked onchange="PhCalculator.updateTitStyle()" /> After equiv. card</label>
+        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-pka" checked onchange="PhCalculator.updateTitStyle()" /> pKa point</label>
       </div>
       <div class="display-divider"></div>
-      <div class="mini-note" style="font-weight:700;color:var(--text);margin-bottom:6px;">SHOW/HIDE LABELS</div>
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-init" checked onchange="PhCalculator.updateTitStyle()" /> Initial pH</label>
-        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-half" checked onchange="PhCalculator.updateTitStyle()" /> Half-equiv. pH</label>
-        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-equiv" checked onchange="PhCalculator.updateTitStyle()" /> Equiv. pH</label>
-        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-after" checked onchange="PhCalculator.updateTitStyle()" /> After equiv.</label>
-        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-pka" checked onchange="PhCalculator.updateTitStyle()" /> pKa</label>
+      <div class="mini-note" style="font-weight:700;color:var(--text);margin-bottom:6px;">PLOT POINTS</div>
+      <div class="mini-note" style="margin-bottom:8px;">Click the graph to place a point, or configure defaults below.</div>
+      <div class="section-label" style="margin-bottom:4px;">Defaults for new points</div>
+      <div style="display:flex;flex-direction:column;gap:3px;margin-bottom:8px;">
+        <label class="stoi-radio" style="font-size:12px;"><input type="checkbox" id="ph-def-coord" checked /> Show ordered pair label</label>
+        <label class="stoi-radio" style="font-size:12px;"><input type="checkbox" id="ph-def-dotted" checked /> Show dotted projection lines</label>
+        <label class="stoi-radio" style="font-size:12px;"><input type="checkbox" id="ph-def-snap" /> Snap to curve line</label>
       </div>
-      <div style="margin-top:8px;">
-        <button class="action-btn" onclick="PhCalculator.clearUserPoints()" style="font-size:11px;padding:5px 10px;">🗑 Clear Added Points</button>
-      </div>`;
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+        <div>
+          <label class="stoi-lbl">Dot color</label>
+          <input type="color" id="ph-def-dot-color" value="#e94560"
+            style="width:100%;height:28px;border:1px solid #c8d5ee;border-radius:5px;cursor:pointer;" />
+        </div>
+        <div>
+          <label class="stoi-lbl">Line color</label>
+          <input type="color" id="ph-def-line-color" value="#555555"
+            style="width:100%;height:28px;border:1px solid #c8d5ee;border-radius:5px;cursor:pointer;" />
+        </div>
+      </div>
+      <label class="stoi-lbl">Dotted line thickness</label>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+        <input type="range" id="ph-def-thick-range" min="0.5" max="4" step="0.5" value="1"
+          style="flex:1;accent-color:var(--accent);"
+          oninput="document.getElementById('ph-def-thick-num').value=this.value" />
+        <input type="number" id="ph-def-thick-num" value="1" min="0.5" max="4" step="0.5"
+          class="stoi-num-input" style="width:52px;"
+          oninput="document.getElementById('ph-def-thick-range').value=this.value" />
+      </div>
+      <button class="action-btn primary" onclick="PhCalculator.addPointManual()" style="width:100%;margin-bottom:8px;">＋ Add Point</button>
+      <div class="display-divider"></div>
+      <div id="ph-user-points-list">
+        <div style="font-size:11px;color:var(--text-dim);padding:4px 0;">Click the graph to add points.</div>
+      </div>
+      <button class="action-btn" onclick="PhCalculator.clearUserPoints()" style="font-size:11px;padding:5px 10px;margin-top:6px;width:100%;">🗑 Clear All Points</button>`;
   }
 
   // ── SMART MODE LIVE DETECTION ──
@@ -1499,17 +1521,29 @@ const PhCalculator = (() => {
   // labelOff = {dx, dy} canvas offset for draggable label; null = auto
 
   function _defaultPointProps() {
-    const s = _tit ? _tit.style : {};
+    const g = id => document.getElementById(id);
     return {
-      showCoord:   true,
-      showDotted:  true,
-      dotColor:    s.pointLineColor || '#e94560',
-      lineColor:   s.pointLineColor || '#555555',
-      lineThick:   s.pointLineWidth || 1,
+      showCoord:   g('ph-def-coord')   ? g('ph-def-coord').checked   : true,
+      showDotted:  g('ph-def-dotted')  ? g('ph-def-dotted').checked  : true,
+      snapToLine:  g('ph-def-snap')    ? g('ph-def-snap').checked    : false,
+      dotColor:    g('ph-def-dot-color')  ? g('ph-def-dot-color').value  : '#e94560',
+      lineColor:   g('ph-def-line-color') ? g('ph-def-line-color').value : '#555555',
+      lineThick:   g('ph-def-thick-num')  ? parseFloat(g('ph-def-thick-num').value) || 1 : 1,
       customLabel: '',
       labelOff:    null,
-      snapToLine:  false,
     };
+  }
+
+  function addPointManual() {
+    // Manual add — no canvas click, just use snap or free placement at midpoint
+    if (!_tit) { showAlert('Run a titration calculation first.', true); return; }
+    const maxX = _tit.points.length ? _tit.points[_tit.points.length-1].x : 60;
+    const props = _defaultPointProps();
+    const vx = Math.round(maxX / 2 * 10) / 10;
+    const vy = props.snapToLine ? (Math.round((_interpCurve(vx) || 7) * 100) / 100) : 7;
+    _tit.userPoints.push({ vx, vy, ...props });
+    _rebuildPointsList();
+    redrawChart();
   }
 
   // Convert canvas pixel → data coords
@@ -2125,7 +2159,7 @@ const PhCalculator = (() => {
 
   return { init, setMode, calculate, clearAll, exportCurve, exportFull, redrawChart,
            updateTitStyle, clearUserPoints, updateUserPoint, removeUserPoint, pickPointColor,
-           toggleSnapToLine,
+           toggleSnapToLine, addPointManual,
            smartDetect, smartUpdateFields, smartOverrideChanged, bufferModeSwitch };
 })();
 
