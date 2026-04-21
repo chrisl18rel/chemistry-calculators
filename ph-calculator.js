@@ -276,7 +276,93 @@ const PhCalculator = (() => {
       <div class="display-divider"></div>
       <div class="mini-note" style="margin-bottom:6px;font-weight:700;color:var(--text);">Titrant (in burette)</div>
       ${numField('ph-tit-t-conc', 'Titrant Concentration (mol/L)', 'e.g. 0.100')}
-      ${numField('ph-tit-t-maxvol', 'Max Titrant Volume to Plot (mL)', '60', 'Default: 60 mL')}`;
+      ${numField('ph-tit-t-maxvol', 'Max Titrant Volume to Plot (mL)', '60', 'Default: 60 mL')}
+      <div class="display-divider"></div>
+      <div class="mini-note" style="font-weight:700;color:var(--text);margin-bottom:6px;">GRAPH TITLE</div>
+      <div style="margin-bottom:6px;">
+        <input type="text" id="ph-tit-title" placeholder="Optional title..."
+          class="formula-input" style="width:100%;box-sizing:border-box;font-size:12px;"
+          oninput="PhCalculator.updateTitStyle()" />
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px;">
+        <div><label class="stoi-lbl">Size</label>
+          <input type="number" id="ph-tit-title-size" value="14" min="8" max="32"
+            class="stoi-num-input" style="width:100%;box-sizing:border-box;" oninput="PhCalculator.updateTitStyle()" /></div>
+        <div><label class="stoi-lbl">Color</label>
+          <input type="color" id="ph-tit-title-color" value="#1a2a4a"
+            style="width:100%;height:32px;border:1px solid #c8d5ee;border-radius:5px;cursor:pointer;"
+            oninput="PhCalculator.updateTitStyle()" /></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+        <label class="stoi-radio" style="font-size:12px;">
+          <input type="checkbox" id="ph-tit-title-bold" checked onchange="PhCalculator.updateTitStyle()" /> Bold
+        </label>
+        <select id="ph-tit-title-align" class="stoi-select" style="flex:1;min-width:unset;background:#fff;color:#111;font-size:11px;"
+          onchange="PhCalculator.updateTitStyle()">
+          <option value="left">Left</option>
+          <option value="center" selected>Center</option>
+          <option value="right">Right</option>
+        </select>
+      </div>
+      <div class="display-divider"></div>
+      <div class="mini-note" style="font-weight:700;color:var(--text);margin-bottom:6px;">LABEL STYLE</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px;">
+        <div><label class="stoi-lbl">Font Size</label>
+          <input type="number" id="ph-tit-lbl-size" value="10" min="7" max="18"
+            class="stoi-num-input" style="width:100%;box-sizing:border-box;" oninput="PhCalculator.updateTitStyle()" /></div>
+        <div><label class="stoi-lbl">Color</label>
+          <input type="color" id="ph-tit-lbl-color" value="#1a2a4a"
+            style="width:100%;height:32px;border:1px solid #c8d5ee;border-radius:5px;cursor:pointer;"
+            oninput="PhCalculator.updateTitStyle()" /></div>
+      </div>
+      <div style="margin-bottom:8px;">
+        <label class="stoi-radio" style="font-size:12px;">
+          <input type="checkbox" id="ph-tit-lbl-bold" onchange="PhCalculator.updateTitStyle()" /> Bold labels
+        </label>
+      </div>
+      <div class="display-divider"></div>
+      <div class="mini-note" style="font-weight:700;color:var(--text);margin-bottom:6px;">LINE COLORS</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px;">
+        <div><label class="stoi-lbl">Equiv.</label>
+          <input type="color" id="ph-tit-equiv-color" value="#f39c12"
+            style="width:100%;height:28px;border:1px solid #c8d5ee;border-radius:5px;cursor:pointer;"
+            oninput="PhCalculator.updateTitStyle()" /></div>
+        <div><label class="stoi-lbl">½-Equiv.</label>
+          <input type="color" id="ph-tit-half-color" value="#e94560"
+            style="width:100%;height:28px;border:1px solid #c8d5ee;border-radius:5px;cursor:pointer;"
+            oninput="PhCalculator.updateTitStyle()" /></div>
+        <div><label class="stoi-lbl">pKa line</label>
+          <input type="color" id="ph-tit-pka-color" value="#2ecc71"
+            style="width:100%;height:28px;border:1px solid #c8d5ee;border-radius:5px;cursor:pointer;"
+            oninput="PhCalculator.updateTitStyle()" /></div>
+        <div><label class="stoi-lbl">Buffer Fill</label>
+          <input type="color" id="ph-tit-buf-color" value="#4caf50"
+            style="width:100%;height:28px;border:1px solid #c8d5ee;border-radius:5px;cursor:pointer;"
+            oninput="PhCalculator.updateTitStyle()" /></div>
+      </div>
+      <div class="display-divider"></div>
+      <div class="mini-note" style="font-weight:700;color:var(--text);margin-bottom:6px;">ADDED POINT LINES</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px;">
+        <div><label class="stoi-lbl">Color</label>
+          <input type="color" id="ph-tit-pt-color" value="#4a90e2"
+            style="width:100%;height:28px;border:1px solid #c8d5ee;border-radius:5px;cursor:pointer;"
+            oninput="PhCalculator.updateTitStyle()" /></div>
+        <div><label class="stoi-lbl">Thickness</label>
+          <input type="number" id="ph-tit-pt-width" value="1" min="1" max="5"
+            class="stoi-num-input" style="width:100%;box-sizing:border-box;" oninput="PhCalculator.updateTitStyle()" /></div>
+      </div>
+      <div class="display-divider"></div>
+      <div class="mini-note" style="font-weight:700;color:var(--text);margin-bottom:6px;">SHOW/HIDE LABELS</div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-init" checked onchange="PhCalculator.updateTitStyle()" /> Initial pH</label>
+        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-half" checked onchange="PhCalculator.updateTitStyle()" /> Half-equiv. pH</label>
+        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-equiv" checked onchange="PhCalculator.updateTitStyle()" /> Equiv. pH</label>
+        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-after" checked onchange="PhCalculator.updateTitStyle()" /> After equiv.</label>
+        <label class="stoi-radio" style="font-size:11px;"><input type="checkbox" id="ph-show-pka" checked onchange="PhCalculator.updateTitStyle()" /> pKa</label>
+      </div>
+      <div style="margin-top:8px;">
+        <button class="action-btn" onclick="PhCalculator.clearUserPoints()" style="font-size:11px;padding:5px 10px;">🗑 Clear Added Points</button>
+      </div>`;
   }
 
   // ── SMART MODE LIVE DETECTION ──
@@ -1221,49 +1307,99 @@ const PhCalculator = (() => {
     const pKa = Ka ? -Math.log10(Ka) : null;
     const pKb = Kb ? -Math.log10(Kb) : null;
 
+    // Store chart state globally on the module
+    _tit = {
+      type, points, Veq, Vmid, pHInit, pHMid, pHEquiv, pHAfter, Ka, Kb, pKa, pKb,
+      isWeak, molesA, aVol, tConc,
+      // Draggable label positions (canvas coords, null = auto)
+      labelPos: { equiv: null, halfEquiv: null, pka: null, buffer: null },
+      // User-added points
+      userPoints: [],
+      // Style settings (defaults)
+      style: {
+        titleText: '', titleSize: 14, titleBold: true, titleColor: '#1a2a4a', titleAlign: 'center',
+        labelSize: 10, labelBold: false, labelColor: '#1a2a4a',
+        equivColor: '#f39c12', halfEquivColor: '#e94560', pkaColor: '#2ecc71',
+        bufferColor: 'rgba(76,175,80,0.12)',
+        pointLineColor: '#4a90e2', pointLineWidth: 1,
+        showInitialPH: true, showHalfEquivPH: true, showEquivPH: true, showAfterEquiv: true, showPKa: true,
+      },
+    };
+
     const el = document.getElementById('ph-results');
     el.innerHTML = `
       <h2 style="margin-bottom:12px;font-size:18px;color:#1a2a4a;">📈 Titration Curve</h2>
       <div style="background:#f0f6ff;border:1px solid #c8d5ee;border-radius:6px;
-        padding:10px 14px;margin-bottom:14px;font-size:12px;">
+        padding:10px 14px;margin-bottom:10px;font-size:12px;">
         <strong>${typeLabels[type]}</strong><br>
         Analyte: ${(molesA*1000).toFixed(4)} mmol in ${aVol} mL &nbsp;|&nbsp;
         Titrant: ${tConc} mol/L &nbsp;|&nbsp;
-        Equivalence volume: <strong>${Veq.toFixed(2)} mL</strong>
+        Equiv. vol: <strong>${Veq.toFixed(2)} mL</strong>
         ${isWeak && pKa ? ` &nbsp;|&nbsp; pKa = <strong>${pKa.toFixed(2)}</strong>` : ''}
       </div>
 
-      <canvas id="ph-tit-canvas" width="580" height="340"
-        style="width:100%;border:1px solid #dde3f0;border-radius:6px;background:#fff;"></canvas>
+      <canvas id="ph-tit-canvas" width="580" height="360"
+        style="width:100%;border:1px solid #dde3f0;border-radius:6px;background:#fff;cursor:crosshair;"
+        title="Click to add a point"></canvas>
 
-      <div style="text-align:right;margin-top:6px;">
-        <button class="stoi-export-btn" onclick="PhCalculator.exportCurve()">⬇ Export Curve as PNG</button>
-      </div>
-
-      <div style="margin-top:14px;">
-        ${isWeak ? `
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px;margin-bottom:12px;">
-          ${keyPoint('Initial pH',    pHInit  !== null ? pHInit.toFixed(2)  : '—', '#4a90e2')}
-          ${keyPoint('Half-equiv. pH', pHMid  !== null ? pHMid.toFixed(2)   : '—', '#e94560')}
-          ${keyPoint('Equiv. pH',    pHEquiv  !== null ? pHEquiv.toFixed(2) : '—', '#f39c12')}
-          ${keyPoint('After equiv.', pHAfter  !== null ? pHAfter.toFixed(2) : '—', '#9b59b6')}
-          ${pKa !== null ? keyPoint('pKa', pKa.toFixed(2), '#2ecc71') : ''}
-        </div>` : `
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px;margin-bottom:12px;">
-          ${keyPoint('Initial pH',    pHInit  !== null ? pHInit.toFixed(2)  : '—', '#4a90e2')}
-          ${keyPoint('Equiv. pH',    pHEquiv  !== null ? pHEquiv.toFixed(2) : '—', '#f39c12')}
-          ${keyPoint('After equiv.', pHAfter  !== null ? pHAfter.toFixed(2) : '—', '#9b59b6')}
-        </div>`}
-      </div>
+      <div id="ph-tit-keypoints" style="margin-top:12px;"></div>
 
       <div class="results-section-title" style="margin-top:8px;">How to Read This Curve</div>
       <div style="background:#f8f9ff;border:1px solid #dde3f0;border-radius:6px;padding:14px;
-        font-size:13px;line-height:1.8;">
+        font-size:13px;line-height:1.8;margin-bottom:16px;">
         ${titrationExplanation(type, Veq, Vmid, pHInit, pHMid, pHEquiv, pKa, pKb)}
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:8px;" id="ph-tit-export-row">
+        <button class="stoi-export-btn" onclick="PhCalculator.exportCurve()">⬇ Export Graph Only</button>
+        <button class="stoi-export-btn" onclick="PhCalculator.exportFull()">⬇ Export Graph + Data + Explanation</button>
       </div>`;
 
-    // Draw canvas after DOM is set
-    requestAnimationFrame(() => drawTitrationChart(points, Veq, Vmid, type, isWeak, pKa));
+    requestAnimationFrame(() => {
+      _renderKeyPointCards();
+      _initCanvas();
+      redrawChart();
+    });
+  }
+
+  function _renderKeyPointCards() {
+    const s = _tit.style;
+    const kpEl = document.getElementById('ph-tit-keypoints');
+    if (!kpEl) return;
+    const colors = {
+      initial:   s.equivColor,   // reuse equiv color for initial (blue by default)
+      halfEquiv: s.halfEquivColor,
+      equiv:     s.equivColor,
+      after:     '#9b59b6',
+      pka:       s.pkaColor,
+    };
+    // Override: initial and after equiv use fixed color unless set
+    const initColor  = '#4a90e2';
+    const afterColor = '#9b59b6';
+
+    const makeCard = (id, label, value, color, showKey) => {
+      if (!_tit[showKey] && _tit[showKey] !== undefined) return '';
+      const show = s[showKey] !== false;
+      return `<div id="ph-kp-${id}" style="background:#fff;border:1px solid #dde3f0;border-radius:6px;
+        padding:8px 10px;border-top:3px solid ${color};opacity:${show?1:0.4};">
+        <div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;">${label}</div>
+        <div style="font-size:18px;font-weight:700;color:#1a2a4a;">${value}</div>
+      </div>`;
+    };
+
+    const { isWeak, pHInit, pHMid, pHEquiv, pHAfter, pKa } = _tit;
+    const fmt = v => v !== null && v !== undefined ? v.toFixed(2) : '—';
+
+    let html = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px;margin-bottom:12px;">`;
+    if (s.showInitialPH  !== false) html += makeCard('init',    'Initial pH',    fmt(pHInit),  initColor,  'showInitialPH');
+    if (isWeak && s.showHalfEquivPH !== false)
+      html += makeCard('half', 'Half-equiv. pH', fmt(pHMid), s.halfEquivColor, 'showHalfEquivPH');
+    if (s.showEquivPH    !== false) html += makeCard('equiv',   'Equiv. pH',     fmt(pHEquiv), s.equivColor, 'showEquivPH');
+    if (s.showAfterEquiv !== false) html += makeCard('after',   'After equiv.',  fmt(pHAfter), afterColor,  'showAfterEquiv');
+    if (isWeak && pKa !== null && s.showPKa !== false)
+      html += makeCard('pka', 'pKa', fmt(pKa), s.pkaColor, 'showPKa');
+    html += `</div>`;
+    kpEl.innerHTML = html;
   }
 
   function keyPoint(label, value, color) {
@@ -1278,28 +1414,27 @@ const PhCalculator = (() => {
     const isWeak = type === 'wa-sb' || type === 'wb-sa';
     let html = `<p style="margin:0 0 8px;">The <strong>x-axis</strong> shows the volume of titrant added (mL).
       The <strong>y-axis</strong> shows the pH of the solution.</p>`;
-
     if (isWeak) {
       html += `
         <p style="margin:0 0 6px;">
           <span style="display:inline-block;width:12px;height:12px;background:#4a90e222;
             border:2px solid #4a90e2;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>
-          <strong>Initial point (0 mL):</strong> pH = ${pHInit?.toFixed(2) ?? '—'} — 
+          <strong>Initial point (0 mL):</strong> pH = ${pHInit?.toFixed(2) ?? '—'} —
           reflects only the ${type === 'wa-sb' ? 'weak acid' : 'weak base'} equilibrium.
         </p>
         <p style="margin:0 0 6px;">
           <span style="display:inline-block;width:12px;height:12px;background:#4caf5033;
             border:2px solid #4caf50;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>
-          <strong>Buffer region (0 – ${Veq.toFixed(1)} mL):</strong> Both the weak 
+          <strong>Buffer region (0 – ${Veq.toFixed(1)} mL):</strong> Both the weak
           ${type === 'wa-sb' ? 'acid (HA) and its conjugate base (A⁻)' : 'base (B) and conjugate acid (BH⁺)'}
           are present. pH changes slowly — the solution resists pH change.
         </p>
         <p style="margin:0 0 6px;">
           <span style="display:inline-block;width:12px;height:12px;background:#e9456033;
             border:2px solid #e94560;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>
-          <strong>Half-equivalence point (${Vmid.toFixed(1)} mL):</strong> Exactly half the 
+          <strong>Half-equivalence point (${Vmid.toFixed(1)} mL):</strong> Exactly half the
           ${type === 'wa-sb' ? 'acid' : 'base'} has been neutralized.
-          At this point <strong>pH = pK${type === 'wa-sb' ? 'a' : 'a'} = ${pKa?.toFixed(2) ?? '—'}</strong>.
+          At this point <strong>pH = pKa = ${pKa?.toFixed(2) ?? '—'}</strong>.
           This is the most important reference point on the curve.
         </p>
         <p style="margin:0 0 6px;">
@@ -1309,155 +1444,266 @@ const PhCalculator = (() => {
           pH = ${pHEquiv?.toFixed(2) ?? '—'} — ${type === 'wa-sb' ? 'above 7 because conjugate base hydrolyzes' : 'below 7 because conjugate acid dissociates'}.
         </p>
         <p style="margin:0 0 0;">
-          <strong>After equivalence:</strong> Excess titrant controls pH. 
+          <strong>After equivalence:</strong> Excess titrant controls pH.
           ${type === 'wa-sb' ? 'Excess strong base makes the solution more basic.' : 'Excess strong acid makes the solution more acidic.'}
         </p>`;
     } else {
       html += `
         <p style="margin:0 0 6px;"><strong>Initial point:</strong> pH = ${pHInit?.toFixed(2) ?? '—'} from the strong ${type === 'sa-sb' ? 'acid' : 'base'} alone.</p>
         <p style="margin:0 0 6px;"><strong>Before equivalence (${Veq.toFixed(1)} mL):</strong> Excess ${type === 'sa-sb' ? 'strong acid' : 'strong base'} controls pH. No buffer region forms with strong acids/bases.</p>
-        <p style="margin:0 0 6px;"><strong>Equivalence point (${Veq.toFixed(1)} mL):</strong> pH ≈ 7.00. Both acid and base are fully neutralized to give a neutral salt solution.</p>
+        <p style="margin:0 0 6px;"><strong>Equivalence point (${Veq.toFixed(1)} mL):</strong> pH ≈ 7.00. Both acid and base are fully neutralized.</p>
         <p style="margin:0 0 0;"><strong>After equivalence:</strong> Excess titrant controls pH.</p>`;
     }
     return html;
   }
 
-  // ── CANVAS CHART ──
-  function drawTitrationChart(points, Veq, Vmid, type, isWeak, pKa) {
+  // ── INTERACTIVE CANVAS ──
+  let _tit = null; // current titration state
+  const PAD = { top: 40, right: 30, bottom: 50, left: 55 };
+
+  function _initCanvas() {
+    const canvas = document.getElementById('ph-tit-canvas');
+    if (!canvas) return;
+    canvas.addEventListener('mousedown', _onCanvasMouseDown);
+    canvas.addEventListener('mousemove', _onCanvasMouseMove);
+    canvas.addEventListener('mouseup',   _onCanvasMouseUp);
+    canvas.addEventListener('mouseleave',_onCanvasMouseUp);
+    canvas._dragging = null;
+  }
+
+  function _canvasCoords(canvas, e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width  / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+  }
+
+  function _xScale(canvas, maxX) {
+    const CW = canvas.width - PAD.left - PAD.right;
+    return v => PAD.left + (v / maxX) * CW;
+  }
+  function _yScale(canvas) {
+    const CH = canvas.height - PAD.top - PAD.bottom;
+    return pH => PAD.top + (1 - pH / 14) * CH;
+  }
+  function _xInv(canvas, maxX) {
+    const CW = canvas.width - PAD.left - PAD.right;
+    return px => ((px - PAD.left) / CW) * maxX;
+  }
+  function _yInv(canvas) {
+    const CH = canvas.height - PAD.top - PAD.bottom;
+    return py => (1 - (py - PAD.top) / CH) * 14;
+  }
+
+  function _hitTestLabels(canvas, mx, my) {
+    if (!_tit) return null;
+    const { points, Veq, Vmid, pKa, isWeak, labelPos, style } = _tit;
+    const maxX = points.length ? points[points.length-1].x : 60;
+    const xs = _xScale(canvas, maxX), ys = _yScale(canvas);
+    const R = 18; // hit radius
+
+    const candidates = [
+      { key:'equiv',    cx: labelPos.equiv    ? labelPos.equiv.x    : xs(Veq) + 3,  cy: labelPos.equiv    ? labelPos.equiv.y    : PAD.top + 14 },
+    ];
+    if (isWeak) {
+      candidates.push({ key:'halfEquiv', cx: labelPos.halfEquiv ? labelPos.halfEquiv.x : xs(Vmid) + 3, cy: labelPos.halfEquiv ? labelPos.halfEquiv.y : PAD.top + 28 });
+      candidates.push({ key:'buffer',   cx: labelPos.buffer    ? labelPos.buffer.x    : xs(Vmid/2), cy: labelPos.buffer    ? labelPos.buffer.y    : canvas.height - PAD.bottom - 10 });
+      if (pKa !== null) candidates.push({ key:'pka', cx: labelPos.pka ? labelPos.pka.x : canvas.width - PAD.right - 50, cy: labelPos.pka ? labelPos.pka.y : ys(pKa) - 6 });
+    }
+    for (const c of candidates) {
+      if (Math.abs(mx - c.cx) < R*2 && Math.abs(my - c.cy) < 14) return { key: c.key, offX: mx - c.cx, offY: my - c.cy };
+    }
+    return null;
+  }
+
+  function _onCanvasMouseDown(e) {
+    const canvas = this;
+    const { x, y } = _canvasCoords(canvas, e);
+    const hit = _hitTestLabels(canvas, x, y);
+    if (hit) {
+      canvas._dragging = hit;
+      canvas.style.cursor = 'grabbing';
+      return;
+    }
+    // Click in plot area = add user point
+    if (!_tit) return;
+    const maxX = _tit.points.length ? _tit.points[_tit.points.length-1].x : 60;
+    const CW = canvas.width - PAD.left - PAD.right;
+    const CH = canvas.height - PAD.top - PAD.bottom;
+    if (x >= PAD.left && x <= PAD.left+CW && y >= PAD.top && y <= PAD.top+CH) {
+      const vol = _xInv(canvas, maxX)(x);
+      const pH  = _yInv(canvas)(y);
+      _tit.userPoints.push({
+        vx: vol, vy: Math.min(Math.max(pH, 0), 14),
+        showLabel: true, showLines: true,
+        lineColor: _tit.style.pointLineColor,
+        lineWidth: _tit.style.pointLineWidth,
+      });
+      redrawChart();
+    }
+  }
+
+  function _onCanvasMouseMove(e) {
+    const canvas = this;
+    if (!canvas._dragging) return;
+    const { x, y } = _canvasCoords(canvas, e);
+    const key = canvas._dragging.key;
+    _tit.labelPos[key] = { x: x - canvas._dragging.offX, y: y - canvas._dragging.offY };
+    redrawChart();
+  }
+
+  function _onCanvasMouseUp() {
+    const canvas = document.getElementById('ph-tit-canvas');
+    if (canvas) { canvas._dragging = null; canvas.style.cursor = 'crosshair'; }
+  }
+
+  function redrawChart() {
+    if (!_tit) return;
+    const { type, points, Veq, Vmid, pKa, isWeak, labelPos, style, userPoints } = _tit;
     const canvas = document.getElementById('ph-tit-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const W = canvas.width, H = canvas.height;
-    const PAD = { top: 20, right: 30, bottom: 50, left: 55 };
     const CW = W - PAD.left - PAD.right;
     const CH = H - PAD.top  - PAD.bottom;
-
     const maxX = points.length ? points[points.length-1].x : 60;
-    const xScale = v  => PAD.left + (v / maxX) * CW;
-    const yScale = pH => PAD.top  + (1 - pH / 14) * CH;
+    const xs = v  => PAD.left + (v / maxX) * CW;
+    const ys = pH => PAD.top  + (1 - pH / 14) * CH;
 
     ctx.clearRect(0, 0, W, H);
-
-    // Background
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, W, H);
 
-    // Buffer region shading
-    if (isWeak) {
-      ctx.fillStyle = 'rgba(76,175,80,0.07)';
-      ctx.fillRect(xScale(0), PAD.top, xScale(Veq) - xScale(0), CH);
+    // Title
+    if (style.titleText && style.titleText.trim()) {
+      ctx.save();
+      ctx.font = `${style.titleBold?'bold ':' '}${style.titleSize}px Segoe UI, sans-serif`;
+      ctx.fillStyle = style.titleColor;
+      const tx = style.titleAlign === 'left' ? PAD.left
+               : style.titleAlign === 'right' ? PAD.left + CW
+               : PAD.left + CW / 2;
+      ctx.textAlign = style.titleAlign;
+      ctx.fillText(style.titleText, tx, 18);
+      ctx.restore();
     }
 
-    // Grid lines
-    ctx.strokeStyle = '#e8edf5';
-    ctx.lineWidth = 1;
+    // Buffer region
+    if (isWeak) {
+      ctx.fillStyle = style.bufferColor;
+      ctx.fillRect(xs(0), PAD.top, xs(Veq) - xs(0), CH);
+    }
+
+    // Grid
+    ctx.strokeStyle = '#e8edf5'; ctx.lineWidth = 1;
     for (let ph = 0; ph <= 14; ph += 2) {
-      ctx.beginPath();
-      ctx.moveTo(PAD.left, yScale(ph));
-      ctx.lineTo(PAD.left + CW, yScale(ph));
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(PAD.left, ys(ph)); ctx.lineTo(PAD.left+CW, ys(ph)); ctx.stroke();
     }
     for (let v = 0; v <= maxX; v += 10) {
-      ctx.beginPath();
-      ctx.moveTo(xScale(v), PAD.top);
-      ctx.lineTo(xScale(v), PAD.top + CH);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(xs(v), PAD.top); ctx.lineTo(xs(v), PAD.top+CH); ctx.stroke();
     }
 
-    // Equivalence line
+    // Reference lines
     ctx.setLineDash([5, 4]);
-    ctx.strokeStyle = '#f39c12';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(xScale(Veq), PAD.top);
-    ctx.lineTo(xScale(Veq), PAD.top + CH);
-    ctx.stroke();
+    ctx.strokeStyle = style.equivColor; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(xs(Veq), PAD.top); ctx.lineTo(xs(Veq), PAD.top+CH); ctx.stroke();
 
-    // Half-equivalence line
     if (isWeak) {
-      ctx.strokeStyle = '#e94560';
-      ctx.beginPath();
-      ctx.moveTo(xScale(Vmid), PAD.top);
-      ctx.lineTo(xScale(Vmid), PAD.top + CH);
-      ctx.stroke();
-
-      // pKa horizontal dashed line
+      ctx.strokeStyle = style.halfEquivColor;
+      ctx.beginPath(); ctx.moveTo(xs(Vmid), PAD.top); ctx.lineTo(xs(Vmid), PAD.top+CH); ctx.stroke();
       if (pKa !== null) {
-        ctx.strokeStyle = '#2ecc71';
-        ctx.beginPath();
-        ctx.moveTo(PAD.left, yScale(pKa));
-        ctx.lineTo(PAD.left + CW, yScale(pKa));
-        ctx.stroke();
+        ctx.strokeStyle = style.pkaColor;
+        ctx.beginPath(); ctx.moveTo(PAD.left, ys(pKa)); ctx.lineTo(PAD.left+CW, ys(pKa)); ctx.stroke();
       }
     }
-
     ctx.setLineDash([]);
 
     // Titration curve
-    ctx.strokeStyle = '#1a56a8';
-    ctx.lineWidth = 2.5;
-    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#1a56a8'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
     ctx.beginPath();
     let first = true;
     for (const pt of points) {
-      const px = xScale(pt.x), py = yScale(pt.y);
-      if (first) { ctx.moveTo(px, py); first = false; }
-      else ctx.lineTo(px, py);
+      const px = xs(pt.x), py = ys(pt.y);
+      if (first) { ctx.moveTo(px, py); first = false; } else ctx.lineTo(px, py);
     }
     ctx.stroke();
 
     // Axes
-    ctx.strokeStyle = '#1a2a4a';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(PAD.left, PAD.top);
-    ctx.lineTo(PAD.left, PAD.top + CH);
-    ctx.lineTo(PAD.left + CW, PAD.top + CH);
-    ctx.stroke();
+    ctx.strokeStyle = '#1a2a4a'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(PAD.left, PAD.top); ctx.lineTo(PAD.left, PAD.top+CH); ctx.lineTo(PAD.left+CW, PAD.top+CH); ctx.stroke();
 
-    // Axis labels
-    ctx.fillStyle = '#333';
-    ctx.font = '11px Segoe UI, sans-serif';
-    ctx.textAlign = 'center';
-    for (let ph = 0; ph <= 14; ph += 2) {
-      ctx.fillText(ph, PAD.left - 22, yScale(ph) + 4);
-    }
-    for (let v = 0; v <= maxX; v += 10) {
-      ctx.fillText(v, xScale(v), PAD.top + CH + 18);
-    }
+    // Axis tick labels
+    ctx.fillStyle = '#333'; ctx.font = '11px Segoe UI, sans-serif'; ctx.textAlign = 'center';
+    for (let ph = 0; ph <= 14; ph += 2) ctx.fillText(ph, PAD.left-22, ys(ph)+4);
+    for (let v = 0; v <= maxX; v += 10) ctx.fillText(v, xs(v), PAD.top+CH+18);
 
     // Axis titles
-    ctx.font = 'bold 12px Segoe UI, sans-serif';
-    ctx.fillStyle = '#1a2a4a';
-    ctx.textAlign = 'center';
-    ctx.fillText('Volume of Titrant Added (mL)', PAD.left + CW / 2, H - 6);
-    ctx.save();
-    ctx.translate(13, PAD.top + CH / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillText('pH', 0, 0);
-    ctx.restore();
+    ctx.font = 'bold 12px Segoe UI, sans-serif'; ctx.fillStyle = '#1a2a4a'; ctx.textAlign = 'center';
+    ctx.fillText('Volume of Titrant Added (mL)', PAD.left+CW/2, H-6);
+    ctx.save(); ctx.translate(13, PAD.top+CH/2); ctx.rotate(-Math.PI/2); ctx.fillText('pH', 0, 0); ctx.restore();
 
-    // Labels on chart
-    ctx.font = '10px Segoe UI, sans-serif';
-    ctx.fillStyle = '#f39c12';
-    ctx.textAlign = 'left';
-    ctx.fillText(`Equiv. (${Veq.toFixed(1)} mL)`, xScale(Veq) + 3, PAD.top + 14);
+    // Draggable labels
+    const lf = `${style.labelBold?'bold ':' '}${style.labelSize}px Segoe UI, sans-serif`;
+    ctx.font = lf;
+
+    const drawLabel = (key, defaultX, defaultY, text, color) => {
+      const lx = labelPos[key] ? labelPos[key].x : defaultX;
+      const ly = labelPos[key] ? labelPos[key].y : defaultY;
+      ctx.fillStyle = color;
+      ctx.textAlign = 'left';
+      ctx.fillText(text, lx, ly);
+      // Subtle drag handle indicator
+      ctx.strokeStyle = color + '66';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(lx - 2, ly - style.labelSize, ctx.measureText(text).width + 4, style.labelSize + 4);
+    };
+
+    drawLabel('equiv', xs(Veq)+3, PAD.top+14, `Equiv. (${Veq.toFixed(1)} mL)`, style.equivColor);
 
     if (isWeak) {
-      ctx.fillStyle = '#e94560';
-      ctx.fillText(`½-equiv. (${Vmid.toFixed(1)} mL)`, xScale(Vmid) + 3, PAD.top + 26);
-
+      drawLabel('halfEquiv', xs(Vmid)+3, PAD.top+28, `½-equiv. (${Vmid.toFixed(1)} mL)`, style.halfEquivColor);
       if (pKa !== null) {
-        ctx.fillStyle = '#2ecc71';
         ctx.textAlign = 'right';
-        ctx.fillText(`pKa = ${pKa.toFixed(2)}`, PAD.left + CW - 4, yScale(pKa) - 4);
+        const lx = labelPos.pka ? labelPos.pka.x : PAD.left+CW-4;
+        const ly = labelPos.pka ? labelPos.pka.y : ys(pKa)-4;
+        ctx.fillStyle = style.pkaColor;
+        ctx.font = lf;
+        ctx.fillText(`pKa = ${pKa.toFixed(2)}`, lx, ly);
+        ctx.textAlign = 'left';
       }
-
-      ctx.fillStyle = 'rgba(76,175,80,0.7)';
-      ctx.font = 'bold 10px Segoe UI, sans-serif';
+      ctx.fillStyle = style.bufferColor.replace('0.12','0.8');
+      const bx = labelPos.buffer ? labelPos.buffer.x : xs(Vmid/2);
+      const by = labelPos.buffer ? labelPos.buffer.y : PAD.top+CH-10;
+      ctx.font = `bold ${style.labelSize}px Segoe UI, sans-serif`;
       ctx.textAlign = 'center';
-      ctx.fillText('Buffer Region', xScale(Vmid / 2), PAD.top + CH - 10);
+      ctx.fillStyle = '#2e7d32';
+      ctx.fillText('Buffer Region', bx, by);
     }
+
+    // User-added points
+    for (const up of userPoints) {
+      const px = xs(up.vx), py = ys(up.vy);
+      // Dot
+      ctx.fillStyle = up.lineColor;
+      ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI*2); ctx.fill();
+      // Crosshair lines
+      if (up.showLines) {
+        ctx.setLineDash([4, 3]);
+        ctx.strokeStyle = up.lineColor; ctx.lineWidth = up.lineWidth;
+        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, PAD.top+CH); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(PAD.left, py); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      // Label
+      if (up.showLabel) {
+        ctx.font = `${style.labelSize}px Segoe UI, sans-serif`;
+        ctx.fillStyle = style.labelColor;
+        ctx.textAlign = 'left';
+        ctx.fillText(`(${up.vx.toFixed(1)}, ${up.vy.toFixed(2)})`, px+6, py-4);
+      }
+    }
+
+    // Refresh key point cards to reflect updated colors
+    _renderKeyPointCards();
   }
 
   function exportCurve() {
@@ -1469,13 +1715,130 @@ const PhCalculator = (() => {
     link.click();
   }
 
+  function exportFull() {
+    const canvas = document.getElementById('ph-tit-canvas');
+    if (!canvas || !_tit) { showAlert('No titration curve to export.', true); return; }
+
+    // Create an off-screen canvas with extra height for data + explanation
+    const srcW  = canvas.width;
+    const srcH  = canvas.height;
+    const margin = 20;
+
+    // Collect text content from the explanation div
+    const kpEl   = document.getElementById('ph-tit-keypoints');
+    const expEl  = document.querySelector('#ph-results .results-section-title');
+    const expBox = document.querySelector('#ph-results div[style*="line-height:1.8"]');
+
+    const kpText  = kpEl  ? kpEl.innerText.replace(/\n+/g,'\n').trim().split('\n') : [];
+    const expText = expBox ? expBox.innerText.replace(/\n+/g,'\n').trim().split('\n') : [];
+
+    const lineH = 18;
+    const extraH = margin + (kpText.length + expText.length + 4) * lineH + margin * 2;
+
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width  = srcW;
+    offCanvas.height = srcH + extraH;
+    const ctx = offCanvas.getContext('2d');
+
+    // White background
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, offCanvas.width, offCanvas.height);
+
+    // Draw the chart
+    ctx.drawImage(canvas, 0, 0);
+
+    // Draw text below
+    let ty = srcH + margin;
+    ctx.fillStyle = '#1a2a4a';
+    ctx.font = 'bold 13px Segoe UI, sans-serif';
+    ctx.fillText('Key Values', margin, ty); ty += lineH * 1.2;
+
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.fillStyle = '#333';
+    for (const line of kpText) {
+      if (line.trim()) { ctx.fillText(line.trim(), margin, ty); ty += lineH; }
+    }
+
+    ty += lineH * 0.5;
+    ctx.fillStyle = '#1a2a4a';
+    ctx.font = 'bold 13px Segoe UI, sans-serif';
+    ctx.fillText('How to Read This Curve', margin, ty); ty += lineH * 1.2;
+
+    ctx.font = '11px Segoe UI, sans-serif';
+    ctx.fillStyle = '#333';
+    const wrapWidth = srcW - margin * 2;
+    for (const line of expText) {
+      if (!line.trim()) { ty += lineH * 0.3; continue; }
+      // Word-wrap
+      const words = line.trim().split(' ');
+      let cur = '';
+      for (const w of words) {
+        const test = cur ? cur + ' ' + w : w;
+        if (ctx.measureText(test).width > wrapWidth && cur) {
+          ctx.fillText(cur, margin, ty); ty += lineH; cur = w;
+        } else cur = test;
+      }
+      if (cur) { ctx.fillText(cur, margin, ty); ty += lineH; }
+    }
+
+    const link = document.createElement('a');
+    link.download = 'titration-full.png';
+    link.href = offCanvas.toDataURL('image/png');
+    link.click();
+  }
+
   function clearAll() {
     document.getElementById('ph-results').innerHTML =
       `<div class="placeholder-msg">🧪 Fill in the fields and click <strong>Calculate</strong>.</div>`;
     buildInputs();
   }
 
-  return { init, setMode, calculate, clearAll, exportCurve, smartDetect, smartUpdateFields, smartOverrideChanged, bufferModeSwitch };
+  function updateTitStyle() {
+    if (!_tit) return;
+    const s = _tit.style;
+    const g = id => document.getElementById(id);
+    const v = id => { const el = g(id); return el ? el.value : null; };
+    const c = id => { const el = g(id); return el ? el.checked : true; };
+
+    s.titleText  = v('ph-tit-title') || '';
+    s.titleSize  = parseInt(v('ph-tit-title-size')) || 14;
+    s.titleColor = v('ph-tit-title-color') || '#1a2a4a';
+    s.titleBold  = c('ph-tit-title-bold');
+    s.titleAlign = v('ph-tit-title-align') || 'center';
+
+    s.labelSize  = parseInt(v('ph-tit-lbl-size')) || 10;
+    s.labelColor = v('ph-tit-lbl-color') || '#1a2a4a';
+    s.labelBold  = c('ph-tit-lbl-bold');
+
+    s.equivColor    = v('ph-tit-equiv-color') || '#f39c12';
+    s.halfEquivColor= v('ph-tit-half-color')  || '#e94560';
+    s.pkaColor      = v('ph-tit-pka-color')   || '#2ecc71';
+    const bufHex    = v('ph-tit-buf-color')   || '#4caf50';
+    // Convert hex to rgba with low opacity for buffer region fill
+    const bR = parseInt(bufHex.slice(1,3),16), bG = parseInt(bufHex.slice(3,5),16), bB = parseInt(bufHex.slice(5,7),16);
+    s.bufferColor   = `rgba(${bR},${bG},${bB},0.12)`;
+
+    s.pointLineColor = v('ph-tit-pt-color') || '#4a90e2';
+    s.pointLineWidth = parseInt(v('ph-tit-pt-width')) || 1;
+
+    s.showInitialPH  = c('ph-show-init');
+    s.showHalfEquivPH= c('ph-show-half');
+    s.showEquivPH    = c('ph-show-equiv');
+    s.showAfterEquiv = c('ph-show-after');
+    s.showPKa        = c('ph-show-pka');
+
+    redrawChart();
+  }
+
+  function clearUserPoints() {
+    if (!_tit) return;
+    _tit.userPoints = [];
+    redrawChart();
+  }
+
+  return { init, setMode, calculate, clearAll, exportCurve, exportFull, redrawChart,
+           updateTitStyle, clearUserPoints,
+           smartDetect, smartUpdateFields, smartOverrideChanged, bufferModeSwitch };
 })();
 
 window.addEventListener('load', () => PhCalculator.init());
