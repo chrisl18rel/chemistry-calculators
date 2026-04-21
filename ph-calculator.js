@@ -1529,7 +1529,6 @@ const PhCalculator = (() => {
       dotColor:    g('ph-def-dot-color')  ? g('ph-def-dot-color').value  : '#e94560',
       lineColor:   g('ph-def-line-color') ? g('ph-def-line-color').value : '#555555',
       lineThick:   g('ph-def-thick-num')  ? parseFloat(g('ph-def-thick-num').value) || 1 : 1,
-      customLabel: '',
       labelOff:    null,
     };
   }
@@ -1703,72 +1702,83 @@ const PhCalculator = (() => {
     canvas.style.cursor = 'crosshair';
   }
 
-  // ── POINT LIST (sidebar cards, modelled on solubility curve) ──
+  // ── POINT LIST — exact solubility curve approach, imperative DOM ──
   function _rebuildPointsList() {
-    const el = document.getElementById('ph-user-points-list');
-    if (!el || !_tit) return;
+    const list = document.getElementById('ph-user-points-list');
+    if (!list || !_tit) return;
+    list.innerHTML = '';
     const { userPoints } = _tit;
 
     if (!userPoints.length) {
-      el.innerHTML = '<div style="font-size:11px;color:var(--text-dim);padding:4px 0;">Click the graph to add points.</div>';
+      list.innerHTML = '<div style="font-size:11px;color:var(--text-dim);padding:4px 0;">Click the graph to add points.</div>';
       return;
     }
 
     const LABELS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    el.innerHTML = userPoints.map((up, i) => {
+    userPoints.forEach((up, i) => {
       const letter = LABELS[i % LABELS.length];
-      return `<div class="point-card" id="ph-point-card-${i}">
+      const xR = up.vx.toFixed(1), yR = up.vy.toFixed(2);
+
+      const card = document.createElement('div');
+      card.className = 'point-card';
+      card.id = 'ph-point-card-' + i;
+      card.innerHTML = `
         <div class="point-card-header">
-          <div class="point-label-badge" style="background:${up.dotColor};">${letter}</div>
-          <div class="point-coords" id="ph-pt-coords-${i}">
-            ${up.vx.toFixed(1)} mL, pH ${up.vy.toFixed(2)}
-          </div>
-          <button class="point-delete" onclick="PhCalculator.removeUserPoint(${i})" title="Remove">×</button>
+          <div class="point-label-badge" style="background:${up.dotColor||'#e94560'};">${letter}</div>
+          <div class="point-coords" id="ph-pt-coords-${i}">${xR} mL, pH ${yR}</div>
+          <button class="point-delete" title="Remove">×</button>
         </div>
-
         <div class="point-toggles">
-          <label class="point-toggle">
-            <input type="checkbox" ${up.showCoord ?'checked':''} onchange="PhCalculator.updateUserPoint(${i},'showCoord',this.checked)" />
-            Show ordered pair label
-          </label>
-          <label class="point-toggle">
-            <input type="checkbox" ${up.showDotted?'checked':''} onchange="PhCalculator.updateUserPoint(${i},'showDotted',this.checked)" />
-            Show dotted projection lines
-          </label>
-          <label class="point-toggle">
-            <input type="checkbox" ${up.snapToLine?'checked':''} onchange="PhCalculator.toggleSnapToLine(${i},this.checked)" />
-            Snap to curve line
-          </label>
+          <label class="point-toggle"><input type="checkbox" class="pt-dotted" ${up.showDotted?'checked':''} /> Show projection lines</label>
+          <label class="point-toggle"><input type="checkbox" class="pt-coord"  ${up.showCoord ?'checked':''} /> Show ordered pair label</label>
+          <label class="point-toggle"><input type="checkbox" class="pt-snap"   ${up.snapToLine?'checked':''} /> Snap to curve line</label>
         </div>
-
-        <div style="margin-bottom:6px;">
-          <label class="stoi-lbl" style="margin-bottom:3px;display:block;">Custom label text</label>
-          <input type="text" value="${up.customLabel||''}" placeholder="Blank = (x, y)"
-            class="stoi-num-input" style="width:100%;box-sizing:border-box;font-family:inherit;"
-            oninput="PhCalculator.updateUserPoint(${i},'customLabel',this.value)" />
-          <div class="mini-note">Drag the label on the graph to reposition it</div>
-        </div>
-
         <div class="point-color-row">
-          <label>Dot color</label>
-          <button class="color-swatch-btn" id="ph-pt-dot-${i}"
-            style="background:${up.dotColor};width:22px;height:22px;"
-            onclick="PhCalculator.pickPointColor(${i},'dot',this)"></button>
-          <label style="margin-left:6px;">Line color</label>
-          <button class="color-swatch-btn" id="ph-pt-line-${i}"
-            style="background:${up.lineColor};width:22px;height:22px;"
-            onclick="PhCalculator.pickPointColor(${i},'line',this)"></button>
+          <label>Dot</label>
+          <button class="color-swatch-btn pt-dot-sw" style="background:${up.dotColor||'#e94560'};width:22px;height:22px;"></button>
+          <label style="margin-left:5px;">Line</label>
+          <button class="color-swatch-btn pt-line-sw" style="background:${up.lineColor||'#555555'};width:22px;height:22px;"></button>
         </div>
-
         <div class="point-thick-row">
           <label>Thickness</label>
-          <input type="range" min="0.5" max="4" step="0.5" value="${up.lineThick||1}"
-            oninput="this.nextElementSibling.value=this.value;PhCalculator.updateUserPoint(${i},'lineThick',parseFloat(this.value))" />
-          <input type="number" min="0.5" max="4" step="0.5" value="${up.lineThick||1}"
-            oninput="this.previousElementSibling.value=this.value;PhCalculator.updateUserPoint(${i},'lineThick',parseFloat(this.value))" />
-        </div>
-      </div>`;
-    }).join('');
+          <input type="range" class="pt-thick-r" min="0.5" max="4" step="0.5" value="${up.lineThick||1}" />
+          <input type="number" class="pt-thick-n" min="0.5" max="4" step="0.5" value="${up.lineThick||1}" />
+        </div>`;
+
+      // Wire events — exactly as solubility curve does it
+      card.querySelector('.point-delete').onclick = () => {
+        userPoints.splice(i, 1); _rebuildPointsList(); redrawChart();
+      };
+      card.querySelector('.pt-dotted').onchange = e => { up.showDotted = e.target.checked; redrawChart(); };
+      card.querySelector('.pt-coord').onchange  = e => { up.showCoord  = e.target.checked; redrawChart(); };
+      card.querySelector('.pt-snap').onchange   = e => { toggleSnapToLine(i, e.target.checked); };
+
+      const dotSw = card.querySelector('.pt-dot-sw');
+      dotSw.addEventListener('click', ev => {
+        ev.stopPropagation();
+        openColorPicker(dotSw, up.dotColor || '#e94560', col => {
+          up.dotColor = col; dotSw.style.background = col;
+          const badge = card.querySelector('.point-label-badge');
+          if (badge) badge.style.background = col;
+          redrawChart();
+        });
+      });
+
+      const lineSw = card.querySelector('.pt-line-sw');
+      lineSw.addEventListener('click', ev => {
+        ev.stopPropagation();
+        openColorPicker(lineSw, up.lineColor || '#555555', col => {
+          up.lineColor = col; lineSw.style.background = col; redrawChart();
+        });
+      });
+
+      const tr = card.querySelector('.pt-thick-r');
+      const tn = card.querySelector('.pt-thick-n');
+      tr.oninput = () => { tn.value = tr.value; up.lineThick = parseFloat(tr.value); redrawChart(); };
+      tn.onchange = () => { tr.value = tn.value; up.lineThick = parseFloat(tn.value); redrawChart(); };
+
+      list.appendChild(card);
+    });
   }
 
   function updateUserPoint(i, key, value) {
@@ -2014,18 +2024,16 @@ const PhCalculator = (() => {
       ctx.strokeText(letter, px, py-7);
       ctx.fillStyle = '#222'; ctx.fillText(letter, px, py-7);
 
-      // Ordered pair / custom label (draggable)
+      // Ordered pair label — matches solubility curve exactly
       if (up.showCoord) {
-        const labelText = (up.customLabel && up.customLabel.trim())
-          ? up.customLabel.trim()
-          : `(${up.vx.toFixed(1)} mL, ${up.vy.toFixed(2)})`;
+        const ct = `(${up.vx.toFixed(1)} mL, pH ${up.vy.toFixed(2)})`;
         const lx = up.labelOff ? px + up.labelOff.dx : px + 8;
         const ly = up.labelOff ? py + up.labelOff.dy : py - 8;
         ctx.font = `${style.labelSize*0.88}px Segoe UI, sans-serif`;
         ctx.textAlign = 'left'; ctx.textBaseline = 'top';
         ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 3;
-        ctx.strokeText(labelText, lx, ly);
-        ctx.fillStyle = '#333'; ctx.fillText(labelText, lx, ly);
+        ctx.strokeText(ct, lx, ly);
+        ctx.fillStyle = '#333'; ctx.fillText(ct, lx, ly);
       }
     });
 
