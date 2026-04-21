@@ -1480,7 +1480,7 @@ const PhCalculator = (() => {
 
   // ── INTERACTIVE CANVAS ──
   let _tit = null; // current titration state
-  const PAD = { top: 40, right: 30, bottom: 50, left: 55 };
+  const PAD = { top: 40, right: 30, bottom: 64, left: 55 };
 
   function _initCanvas() {
     const canvas = document.getElementById('ph-tit-canvas');
@@ -1937,7 +1937,7 @@ const PhCalculator = (() => {
 
     // Axis titles
     ctx.font = 'bold 12px Segoe UI, sans-serif'; ctx.fillStyle = '#1a2a4a'; ctx.textAlign = 'center';
-    ctx.fillText('Volume of Titrant Added (mL)', PAD.left+CW/2, H-6);
+    ctx.fillText('Volume of Titrant Added (mL)', PAD.left+CW/2, PAD.top+CH+44);
     ctx.save(); ctx.translate(13, PAD.top+CH/2); ctx.rotate(-Math.PI/2); ctx.fillText('pH', 0, 0); ctx.restore();
 
     // ── Key reference point markers on graph ──
